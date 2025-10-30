@@ -41,6 +41,30 @@ body {
   gap: 24px;
 }
 
+.demo-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.demo-prompt label {
+  font-size: 18px;
+  font-weight: 700;
+  color: #007880;
+  text-align: center;
+}
+
+.demo-prompt__input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #bac2cf;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
 .demo-panel-header h1 {
   margin: 0;
   font-size: 26px;
@@ -135,7 +159,8 @@ body {
 }
 
 .demo-summary h2 {
-  margin: -10px 0 6px;
+  text-align: center;
+  margin: 0 0 6px;
   font-size: 18px;
   color: #007880;
 }
