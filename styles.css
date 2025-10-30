@@ -213,10 +213,27 @@ body {
   transform: translateX(0);
 }
 
-.log-panel h2 {
+.log-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin: 0 0 16px;
+}
+
+.log-panel-header h2 {
+  margin: 0;
   font-size: 20px;
   color: #60a5fa;
+}
+
+.log-panel-close {
+  background: transparent;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.log-panel-close:hover {
+  background: rgba(148, 163, 184, 0.25);
 }
 
 #logContent {

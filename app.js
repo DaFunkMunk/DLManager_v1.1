@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const demoPolicyNotes = document.getElementById("demoPolicyNotes");
   const demoAuditBody = document.getElementById("demoAuditBody");
   const toggleLogsBtn = document.getElementById("toggleLogsBtn");
+  const hideLogsBtn = document.getElementById("hideLogsBtn");
   const logPanel = document.getElementById("logPanel");
   const logContent = document.getElementById("logContent");
 
@@ -304,4 +305,11 @@ document.addEventListener("DOMContentLoaded", () => {
   demoProposeBtn.addEventListener("click", handlePropose);
   demoApplyBtn.addEventListener("click", handleApply);
   toggleLogsBtn.addEventListener("click", toggleLogs);
+  if (hideLogsBtn) {
+    hideLogsBtn.addEventListener("click", () => {
+      if (logPanel.classList.contains("show")) {
+        toggleLogs();
+      }
+    });
+  }
 });
