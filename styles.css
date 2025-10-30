@@ -290,16 +290,20 @@ body {
 
   .demo-form {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
   }
 
-  .demo-field {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 0.9rem;
-  }
+.demo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.demo-field--full {
+  grid-column: 1 / -1;
+}
 
   .demo-field label {
     font-weight: 600;
