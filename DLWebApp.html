@@ -131,14 +131,18 @@
                 </select>
               </div>
               <div class="demo-field">
-                <label for="demoUser">User</label>
-                <input id="demoUser" list="demoUsersList" type="text" placeholder="Jane Doe or jane.doe@demo.local">
-                <datalist id="demoUsersList"></datalist>
+                <label for="demoRuleSelect">Rule</label>
+                <select id="demoRuleSelect">
+                  <option value="User">User</option>
+                  <option value="Tree">Tree</option>
+                  <option value="Location">Location</option>
+                </select>
               </div>
               <div class="demo-field">
-                <label for="demoGroup">Group</label>
-                <input id="demoGroup" list="demoGroupsList" type="text" placeholder="ACL_EVIN-North">
-                <datalist id="demoGroupsList"></datalist>
+                <label for="demoGroupSelect">Group</label>
+                <select id="demoGroupSelect">
+                  <option value="" selected disabled>Select a group...</option>
+                </select>
               </div>
               <div class="demo-field">
                 <label for="demoExpires">Expires</label>
