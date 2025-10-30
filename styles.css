@@ -303,7 +303,7 @@ body {
 
 .demo-field--full select {
   width: 100%;
-  max-width: none;
+  max-width: 520px;
 }
 
 .demo-field--full {
