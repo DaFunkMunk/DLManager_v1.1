@@ -370,6 +370,12 @@ body {
     color: #007880;
   }
 
+  .demo-summary h3 {
+    margin: 10px 0 6px;
+    font-size: 16px;
+    color: #007880;
+  }
+
   .demo-summary table,
   .demo-audit table {
     width: 100%;
