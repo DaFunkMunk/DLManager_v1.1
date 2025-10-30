@@ -116,18 +116,42 @@ body {
   gap: 12px;
 }
 
-.demo-summary,
-.demo-audit {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 .demo-summary h2,
 .demo-audit h2 {
   margin: 0;
   font-size: 18px;
   color: #007880;
+}
+
+.expression-drawer {
+  border: 1px solid #d6dde7;
+  border-radius: 10px;
+  background: #f8fbff;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.expression-drawer.hidden {
+  display: none;
+}
+
+.expression-drawer textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.expression-hint {
+  margin: 0;
+  font-size: 13px;
+  color: #5e6a78;
+  line-height: 1.4;
+}
+
+.expression-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .demo-summary table,
@@ -206,7 +230,7 @@ body {
   position: fixed;
   top: 0;
   right: 0;
-  width: 1200px;
+  width: 360px;
   height: 100vh;
   background: #0f172a;
   color: #e2e8f0;
@@ -237,13 +261,12 @@ body {
 
 .log-panel-close {
   background: transparent;
-  color: #ffffff;
+  color: #e2e8f0;
   border-color: #475569;
 }
 
 .log-panel-close:hover {
   background: rgba(148, 163, 184, 0.25);
-  color: black;
 }
 
 #logContent {

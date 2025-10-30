@@ -119,3 +119,6 @@ class StandardAdapter(DirectoryAdapter):
     def audit(self, limit: int = 100) -> List[Dict[str, Any]]:
         # There is no unified audit store in Standard mode yet.
         return []
+    def validate_expression(self, expression: str) -> Dict[str, Any]:
+        raise NotImplementedError("Expression validation is not supported in standard mode.")
+

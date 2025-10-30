@@ -20,3 +20,6 @@ class DirectoryAdapter(Protocol):
 
     def audit(self, limit: int = 100) -> List[Dict[str, Any]]:
         ...
+
+    def validate_expression(self, expression: str) -> Dict[str, Any]:
+        ...

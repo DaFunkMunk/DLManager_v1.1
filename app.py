@@ -191,6 +191,25 @@ def api_apply():
     return jsonify(result)
 
 
+
+@app.post('/api/expression/validate')
+def api_validate_expression():
+    adapter = get_directory_adapter()
+    body = request.get_json(force=True, silent=True) or {}
+    expression = (body.get('expression') or '').strip()
+    if not expression:
+        return jsonify({'error': 'Expression is required.'}), 400
+    validate = getattr(adapter, 'validate_expression', None)
+    if not callable(validate):
+        return jsonify({'error': 'Expression validation not supported in current mode.'}), 501
+    try:
+        result = validate(expression)
+    except NotImplementedError:
+        return jsonify({'error': 'Expression validation not supported in current mode.'}), 501
+    except Exception as exc:  # pragma: no cover - defensive
+        return jsonify({'error': str(exc)}), 500
+    return jsonify(result)
+
 @app.route('/api/audit')
 def api_audit():
     adapter = get_directory_adapter()

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Callable
 
 from pymongo import ASCENDING, DESCENDING, MongoClient
 from pymongo.collection import Collection
@@ -13,6 +13,67 @@ from .base import DirectoryAdapter
 
 class DemoAdapter(DirectoryAdapter):
     """MongoDB-backed demo directory for portfolio-safe workflows."""
+
+    ALLOWED_ACTIONS = {"add", "remove", "edit"}
+
+    RULE_LABELS: Dict[str, str] = {
+        "user": "User",
+        "tree": "Org Unit",
+        "location": "Location",
+        "role": "Role / Job Title",
+        "employment-type": "Employment Type",
+        "tag": "Tag / Attribute",
+        "directory-group": "Directory Group",
+        "tenure-window": "Tenure Window",
+        "manager": "Manager / Team Lead",
+        "saved-filter": "Saved Filter",
+        "expression": "Dynamic Expression",
+    }
+
+    STATIC_VALUE_FIELDS: Dict[str, List[str]] = {
+        "tree": ["Permian Operations", "Corporate IT", "HSE Response", "Analytics Guild"],
+        "location": ["Permian Field Office", "Midland Regional HQ", "Houston HQ", "Remote"],
+        "role": [
+            "Operations Manager",
+            "Production Engineer",
+            "Pipeline Coordinator",
+            "Contract Technician",
+            "HSE Specialist",
+            "Drilling Supervisor",
+            "IT Systems Analyst",
+            "Data Scientist",
+        ],
+        "employment-type": ["Full-time", "Contractor", "Intern"],
+        "tag": ["Operations", "Responder", "HSE", "AI", "Analytics", "Leadership"],
+        "directory-group": [
+            "DL_Permian_Operators",
+            "DL_Permian_Engineers",
+            "DL_HSE_Responders",
+            "DL_Corporate_IT",
+            "DL_Data_Analytics",
+        ],
+        "tenure-window": ["0-90", "91-180", "181-365", "365+"],
+        "manager": ["Casey Lee", "Alex Rivera", "Maria Gonzales", "Erika Howard"],
+        "saved-filter": ["HSE Responders", "Permian Engineers", "Contractors Ending Soon"],
+    }
+
+    EXPRESSION_ALLOWED_FIELDS = {
+        "employmentType",
+        "location",
+        "role",
+        "department",
+        "tags",
+        "directoryGroups",
+        "manager",
+        "tenureDays",
+        "active",
+    }
+
+    SAVED_FILTERS: Dict[str, Callable[[Dict[str, Any]], bool]] = {
+        "HSE Responders": lambda doc: "HSE" in doc.get("tags", []),
+        "Permian Engineers": lambda doc: doc.get("department") == "Permian Operations" and "Engineer" in (doc.get("role") or ""),
+        "Contractors Ending Soon": lambda doc: doc.get("employmentType") == "Contractor" and doc.get("tenureDays", 0) <= 30,
+    }
 
     def __init__(
         self,
@@ -36,23 +97,25 @@ class DemoAdapter(DirectoryAdapter):
         if seed:
             self.seed_if_empty()
 
-    # ------------------------------------------------------------------ helpers
     def _ensure_indexes(self) -> None:
-        self._users.create_index("email", unique=True, sparse=True)
-        self._users.create_index("displayName", name="idx_users_displayName")
+        self._users.create_index([("displayName", ASCENDING)])
+        self._users.create_index([("email", ASCENDING)], unique=True)
+        self._users.create_index([("department", ASCENDING)])
+        self._users.create_index([("location", ASCENDING)])
+        self._users.create_index([("role", ASCENDING)])
+        self._users.create_index([("employmentType", ASCENDING)])
+        self._users.create_index([("tags", ASCENDING)])
+        self._users.create_index([("directoryGroups", ASCENDING)])
+        self._users.create_index([("manager", ASCENDING)])
 
-        self._groups.create_index("name", unique=True)
-        self._groups.create_index("businessUnit", name="idx_groups_businessUnit")
+        self._groups.create_index([("name", ASCENDING)], unique=True)
+        self._groups.create_index([("businessUnit", ASCENDING)])
 
-        self._memberships.create_index(
-            [("userId", ASCENDING), ("groupId", ASCENDING)],
-            unique=True,
-            name="uidx_memberships_user_group",
-        )
-        self._memberships.create_index("groupId", name="idx_memberships_group")
+        self._memberships.create_index([("userId", ASCENDING), ("groupId", ASCENDING)], unique=True)
+        self._memberships.create_index([("groupId", ASCENDING)])
 
-        self._diffs.create_index([("createdAt", DESCENDING)], name="idx_diffs_createdAt")
-        self._audit.create_index([("ts", DESCENDING)], name="idx_audit_ts")
+        self._diffs.create_index([("createdAt", DESCENDING)])
+        self._audit.create_index([("ts", DESCENDING)])
 
     def seed_if_empty(self) -> None:
         if self._users.estimated_document_count() > 0:
@@ -64,14 +127,28 @@ class DemoAdapter(DirectoryAdapter):
                 "_id": "u_alex",
                 "displayName": "Alex Rivera",
                 "email": "alex.rivera@demo.local",
-                "department": "Permian West",
+                "department": "Permian Operations",
+                "location": "Permian Field Office",
+                "role": "Operations Manager",
+                "employmentType": "Full-time",
+                "tags": ["Operations", "Leadership"],
+                "directoryGroups": ["DL_Permian_Operators", "DL_Leadership"],
+                "manager": "Casey Lee",
+                "tenureDays": 820,
                 "active": True,
             },
             {
                 "_id": "u_jane",
                 "displayName": "Jane Doe",
                 "email": "jane.doe@demo.local",
-                "department": "North Operations",
+                "department": "Permian Operations",
+                "location": "Midland Regional HQ",
+                "role": "Production Engineer",
+                "employmentType": "Full-time",
+                "tags": ["Operations", "Responder"],
+                "directoryGroups": ["DL_Permian_Engineers", "DL_Permian_Operators"],
+                "manager": "Alex Rivera",
+                "tenureDays": 420,
                 "active": True,
             },
             {
@@ -79,6 +156,13 @@ class DemoAdapter(DirectoryAdapter):
                 "displayName": "Sam Contractor",
                 "email": "sam.contractor@demo.local",
                 "department": "East Projects",
+                "location": "Permian Field Office",
+                "role": "Contract Technician",
+                "employmentType": "Contractor",
+                "tags": ["Operations"],
+                "directoryGroups": ["DL_Permian_Engineers"],
+                "manager": "Alex Rivera",
+                "tenureDays": 18,
                 "active": True,
             },
             {
@@ -86,6 +170,13 @@ class DemoAdapter(DirectoryAdapter):
                 "displayName": "Casey Lee",
                 "email": "casey.lee@demo.local",
                 "department": "Corporate IT",
+                "location": "Houston HQ",
+                "role": "IT Systems Analyst",
+                "employmentType": "Full-time",
+                "tags": ["Leadership", "AI"],
+                "directoryGroups": ["DL_Corporate_IT", "DL_Data_Analytics"],
+                "manager": "Maria Gonzales",
+                "tenureDays": 960,
                 "active": True,
             },
             {
@@ -93,27 +184,55 @@ class DemoAdapter(DirectoryAdapter):
                 "displayName": "Maria Gonzales",
                 "email": "maria.gonzales@demo.local",
                 "department": "HSE",
+                "location": "Houston HQ",
+                "role": "HSE Specialist",
+                "employmentType": "Full-time",
+                "tags": ["HSE", "Responder"],
+                "directoryGroups": ["DL_HSE_Responders"],
+                "manager": "Casey Lee",
+                "tenureDays": 640,
                 "active": True,
             },
             {
                 "_id": "u_devon",
                 "displayName": "Devon Price",
                 "email": "devon.price@demo.local",
-                "department": "Permian West",
+                "department": "Permian Operations",
+                "location": "Permian Field Office",
+                "role": "Pipeline Coordinator",
+                "employmentType": "Full-time",
+                "tags": ["Operations"],
+                "directoryGroups": ["DL_Permian_Operators"],
+                "manager": "Alex Rivera",
+                "tenureDays": 210,
                 "active": True,
             },
             {
                 "_id": "u_erika",
                 "displayName": "Erika Howard",
                 "email": "erika.howard@demo.local",
-                "department": "South Ops",
+                "department": "South Operations",
+                "location": "Remote",
+                "role": "Drilling Supervisor",
+                "employmentType": "Full-time",
+                "tags": ["Operations", "Leadership"],
+                "directoryGroups": ["DL_Permian_Operators"],
+                "manager": "Maria Gonzales",
+                "tenureDays": 510,
                 "active": True,
             },
             {
                 "_id": "u_frank",
                 "displayName": "Frank Patel",
                 "email": "frank.patel@demo.local",
-                "department": "Drilling Analytics",
+                "department": "Analytics Guild",
+                "location": "Houston HQ",
+                "role": "Data Scientist",
+                "employmentType": "Full-time",
+                "tags": ["Analytics", "AI"],
+                "directoryGroups": ["DL_Data_Analytics", "DL_Corporate_IT"],
+                "manager": "Casey Lee",
+                "tenureDays": 120,
                 "active": True,
             },
         ]
@@ -160,6 +279,8 @@ class DemoAdapter(DirectoryAdapter):
                 "flag": "Include",
                 "addedAt": now.isoformat(),
                 "expiresAt": one_week.isoformat(),
+                "ruleType": "user",
+                "ruleValue": "Sam Contractor",
             },
             {
                 "_id": "m2",
@@ -168,6 +289,8 @@ class DemoAdapter(DirectoryAdapter):
                 "flag": "Include",
                 "addedAt": now.isoformat(),
                 "expiresAt": None,
+                "ruleType": "user",
+                "ruleValue": "Jane Doe",
             },
             {
                 "_id": "m3",
@@ -176,6 +299,8 @@ class DemoAdapter(DirectoryAdapter):
                 "flag": "Include",
                 "addedAt": now.isoformat(),
                 "expiresAt": None,
+                "ruleType": "tree",
+                "ruleValue": "Permian Operations",
             },
         ]
 
@@ -184,50 +309,40 @@ class DemoAdapter(DirectoryAdapter):
         try:
             self._memberships.insert_many(memberships, ordered=False)
         except DuplicateKeyError:
-            # If parallel seeding attempts run, ignore duplicate inserts.
             pass
 
-    @staticmethod
-    def _policy_notes(changes: List[Dict[str, Any]]) -> List[str]:
-        notes: List[str] = []
-        for change in changes:
-            if change.get("op") == "ADD" and not change.get("expiresAt"):
-                notes.append("Tip: add an expiration date for contractors.")
-        return notes
-
-    @staticmethod
-    def _normalize_membership(doc: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-        if not doc:
-            return None
-        return {
-            "id": str(doc.get("_id")),
-            "userId": doc.get("userId"),
-            "groupId": doc.get("groupId"),
-            "flag": doc.get("flag"),
-            "addedAt": doc.get("addedAt"),
-            "expiresAt": doc.get("expiresAt"),
-        }
-
-    # ------------------------------------------------------------------- public
     def list_users(self, query: Optional[str] = None) -> List[Dict[str, Any]]:
         criteria: Dict[str, Any] = {}
         if query:
             regex = {"$regex": query, "$options": "i"}
             criteria = {"$or": [{"displayName": regex}, {"email": regex}, {"department": regex}]}
 
-        cursor = self._users.find(criteria).sort("displayName", ASCENDING)
-        users: List[Dict[str, Any]] = []
-        for doc in cursor:
-            users.append(
-                {
-                    "id": str(doc.get("_id")),
-                    "displayName": doc.get("displayName"),
-                    "email": doc.get("email"),
-                    "department": doc.get("department"),
-                    "active": bool(doc.get("active", True)),
-                }
-            )
-        return users
+        projection = {
+            "displayName": 1,
+            "email": 1,
+            "department": 1,
+            "location": 1,
+            "role": 1,
+            "employmentType": 1,
+            "manager": 1,
+            "tags": 1,
+        }
+
+        cursor = self._users.find(criteria, projection).sort("displayName", ASCENDING)
+        return [
+            {
+                "id": str(doc.get("_id")),
+                "name": doc.get("displayName"),
+                "email": doc.get("email"),
+                "department": doc.get("department"),
+                "location": doc.get("location"),
+                "role": doc.get("role"),
+                "employmentType": doc.get("employmentType"),
+                "manager": doc.get("manager"),
+                "tags": doc.get("tags", []),
+            }
+            for doc in cursor
+        ]
 
     def list_groups(self, query: Optional[str] = None) -> List[Dict[str, Any]]:
         criteria: Dict[str, Any] = {}
@@ -236,146 +351,371 @@ class DemoAdapter(DirectoryAdapter):
             criteria = {"$or": [{"name": regex}, {"businessUnit": regex}]}
 
         cursor = self._groups.find(criteria).sort("name", ASCENDING)
-        groups: List[Dict[str, Any]] = []
-        for doc in cursor:
-            groups.append(
-                {
-                    "id": str(doc.get("_id")),
-                    "name": doc.get("name"),
-                    "businessUnit": doc.get("businessUnit"),
-                    "description": doc.get("description"),
-                }
+        return [
+            {
+                "id": str(doc.get("_id")),
+                "name": doc.get("name"),
+                "businessUnit": doc.get("businessUnit"),
+                "description": doc.get("description"),
+            }
+            for doc in cursor
+        ]
+
+    # region expression helpers
+    def _expression_context(self, doc: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "employmentType": doc.get("employmentType"),
+            "location": doc.get("location"),
+            "role": doc.get("role"),
+            "department": doc.get("department"),
+            "tags": doc.get("tags", []),
+            "directoryGroups": doc.get("directoryGroups", []),
+            "manager": doc.get("manager"),
+            "tenureDays": doc.get("tenureDays", 0),
+            "active": bool(doc.get("active", True)),
+        }
+
+    def _compile_expression(self, expression: str) -> Any:
+        import ast
+
+        if not expression:
+            raise ValueError("Expression is empty.")
+
+        try:
+            tree = ast.parse(expression, mode="eval")
+        except SyntaxError as exc:
+            raise ValueError(f"Invalid expression syntax: {exc.msg}") from exc
+
+        allowed_nodes = (
+            ast.Expression,
+            ast.BoolOp,
+            ast.UnaryOp,
+            ast.BinOp,
+            ast.Compare,
+            ast.Name,
+            ast.Load,
+            ast.Constant,
+            ast.List,
+            ast.Tuple,
+            ast.Call,
+            ast.And,
+            ast.Or,
+            ast.Not,
+            ast.Eq,
+            ast.NotEq,
+            ast.Gt,
+            ast.GtE,
+            ast.Lt,
+            ast.LtE,
+            ast.In,
+            ast.NotIn,
+            ast.NameConstant,
+        )
+
+        allowed_funcs = {"contains"}
+
+        class Validator(ast.NodeVisitor):
+            def visit(self, node):  # type: ignore[override]
+                if not isinstance(node, allowed_nodes):
+                    raise ValueError("Unsupported expression construct: " + node.__class__.__name__)
+                return super().visit(node)
+
+            def visit_Name(self, node: ast.Name):
+                if node.id not in DemoAdapter.EXPRESSION_ALLOWED_FIELDS:
+                    raise ValueError(f"Unknown field '{node.id}' in expression.")
+
+            def visit_Call(self, node: ast.Call):
+                if not isinstance(node.func, ast.Name) or node.func.id not in allowed_funcs:
+                    raise ValueError("Unsupported function call in expression.")
+                if len(node.args) != 2:
+                    raise ValueError("contains() expects two arguments.")
+                for arg in node.args:
+                    self.visit(arg)
+
+        Validator().visit(tree)
+        code = compile(tree, "<expression>", "eval")
+        return code
+
+    def _evaluate_expression(self, compiled: Any, doc: Dict[str, Any]) -> bool:
+        context = self._expression_context(doc)
+        safe_globals = {"__builtins__": {}, "contains": lambda collection, value: value in (collection or [])}
+        try:
+            result = eval(compiled, safe_globals, context)
+        except Exception as exc:  # pragma: no cover - defensive
+            raise ValueError(f"Failed to evaluate expression: {exc}") from exc
+        if not isinstance(result, bool):
+            raise ValueError("Expression must evaluate to a boolean value.")
+        return result
+
+    # endregion
+
+    def validate_expression(self, expression: str) -> Dict[str, Any]:
+        compiled = self._compile_expression(expression)
+        matches = [doc for doc in self._users.find({}, projection={}) if self._evaluate_expression(compiled, doc)]
+        return {
+            "ok": True,
+            "matches": len(matches),
+            "sample": [doc.get("displayName") for doc in matches[:5]],
+        }
+
+    def _match_users(
+        self,
+        rule_type: str,
+        value: Optional[str] = None,
+        expression: Optional[str] = None,
+        compiled_expression: Any = None,
+    ) -> List[Dict[str, Any]]:
+        rule_type = rule_type.lower()
+
+        if rule_type == "user":
+            if not value:
+                raise ValueError("User value is required.")
+            doc = self._users.find_one(
+                {"$or": [{"displayName": value}, {"email": value}]}
             )
-        return groups
+            return [doc] if doc else []
+
+        if rule_type == "tree":
+            return list(self._users.find({"department": value}))
+
+        if rule_type == "location":
+            return list(self._users.find({"location": value}))
+
+        if rule_type == "role":
+            return list(self._users.find({"role": value}))
+
+        if rule_type == "employment-type":
+            return list(self._users.find({"employmentType": value}))
+
+        if rule_type == "tag":
+            return list(self._users.find({"tags": value}))
+
+        if rule_type == "directory-group":
+            return list(self._users.find({"directoryGroups": value}))
+
+        if rule_type == "tenure-window":
+            if not value:
+                raise ValueError("Tenure window value required.")
+            if value.endswith('+'):
+                min_days = int(value[:-1])
+                return list(self._users.find({"tenureDays": {"$gte": min_days}}))
+            try:
+                lower, upper = value.split('-')
+                lower_days = int(lower)
+                upper_days = int(upper)
+            except ValueError as exc:
+                raise ValueError("Invalid tenure window format.") from exc
+            return list(self._users.find({"tenureDays": {"$gte": lower_days, "$lte": upper_days}}))
+
+        if rule_type == "manager":
+            return list(self._users.find({"manager": value}))
+
+        if rule_type == "saved-filter":
+            predicate = self.SAVED_FILTERS.get(value)
+            if not predicate:
+                return []
+            return [doc for doc in self._users.find({}) if predicate(doc)]
+
+        if rule_type == "expression":
+            if not expression:
+                raise ValueError("Expression is required.")
+            compiled = compiled_expression or self._compile_expression(expression)
+            return [doc for doc in self._users.find({}) if self._evaluate_expression(compiled, doc)]
+
+        raise ValueError(f"Unknown rule type '{rule_type}'.")
+
+    @staticmethod
+    def _preview_change(
+        action: str,
+        rule_type: str,
+        rule_value: Optional[str],
+        expression: Optional[str],
+        user_doc: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        return {
+            "action": action.upper(),
+            "ruleType": rule_type,
+            "ruleLabel": DemoAdapter.RULE_LABELS.get(rule_type, rule_type),
+            "ruleValue": rule_value,
+            "ruleValueLabel": expression if rule_type == "expression" else (rule_value or ""),
+            "expression": expression,
+            "userId": user_doc.get("_id"),
+            "userDisplayName": user_doc.get("displayName"),
+            "userEmail": user_doc.get("email"),
+        }
+
+    def _policy_notes(
+        self,
+        action: str,
+        rule_type: str,
+        matches: List[Dict[str, Any]],
+        expression: Optional[str],
+    ) -> List[str]:
+        notes: List[str] = []
+        if action == "edit":
+            notes.append("Edit will upsert matching memberships in demo mode.")
+        if rule_type == "expression" and expression:
+            notes.append("Dynamic expressions evaluate against live demo attributes.")
+        if not matches:
+            notes.append("No users matched this rule.")
+        elif len(matches) > 25:
+            notes.append("Large change detected - confirm with a stakeholder before applying.")
+        return notes
 
     def propose(self, intent: Dict[str, Any]) -> Dict[str, Any]:
         if not intent:
             return {"error": "Intent body is required."}
 
         action = (intent.get("action") or "").strip().lower()
-        if action not in {"add", "remove"}:
-            return {"error": "Intent requires action 'add' or 'remove'."}
+        if action not in self.ALLOWED_ACTIONS:
+            return {"error": "Unsupported action supplied."}
 
-        user_ref = (intent.get("user") or "").strip()
+        rule_type = (intent.get("ruleType") or "user").strip().lower()
+        if rule_type not in self.RULE_LABELS:
+            return {"error": "Unsupported rule type supplied."}
+
         group_ref = (intent.get("group") or "").strip()
-        expires_at = intent.get("expiresAt")
+        if not group_ref:
+            return {"error": "Group is required."}
 
-        if not user_ref or not group_ref:
-            return {"error": "Intent must include user and group references."}
-
-        user_doc = self._users.find_one(
-            {"$or": [{"_id": user_ref}, {"displayName": user_ref}, {"email": user_ref}]}
-        )
-        if not user_doc:
-            return {"error": f"User '{user_ref}' not found."}
-
-        group_doc = self._groups.find_one(
-            {"$or": [{"_id": group_ref}, {"name": group_ref}]}
-        )
+        group_doc = self._groups.find_one({"$or": [{"_id": group_ref}, {"name": group_ref}]})
         if not group_doc:
-            return {"error": f"Group '{group_ref}' not found."}
+            return {"error": "Group not found."}
 
-        change = {
-            "op": action.upper(),
-            "userId": str(user_doc["_id"]),
-            "userDisplayName": user_doc.get("displayName"),
-            "groupId": str(group_doc["_id"]),
-            "groupName": group_doc.get("name"),
-            "expiresAt": expires_at,
-        }
+        value = (intent.get("value") or "").strip()
+        expression = (intent.get("expression") or "").strip()
+
+        compiled_expression = None
+        if rule_type == "expression":
+            try:
+                compiled_expression = self._compile_expression(expression)
+            except ValueError as exc:
+                return {"error": str(exc)}
+
+        try:
+            matches = self._match_users(rule_type, value=value, expression=expression, compiled_expression=compiled_expression)
+        except ValueError as exc:
+            return {"error": str(exc)}
+
+        changes = [
+            self._preview_change(action, rule_type, value if rule_type != "expression" else None, expression if rule_type == "expression" else None, doc)
+            for doc in matches
+        ]
 
         diff_id = f"d_{uuid.uuid4().hex}"
-        payload = [change]
-        self._diffs.insert_one(
-            {
-                "_id": diff_id,
-                "payload": payload,
-                "createdAt": dt.datetime.utcnow().isoformat(),
-            }
-        )
+        diff_payload = {
+            "_id": diff_id,
+            "action": action,
+            "ruleType": rule_type,
+            "groupId": group_doc.get("_id"),
+            "groupName": group_doc.get("name"),
+            "value": value if rule_type != "expression" else None,
+            "expression": expression if rule_type == "expression" else None,
+            "matches": [doc.get("_id") for doc in matches],
+            "createdAt": dt.datetime.utcnow().isoformat(),
+        }
+        self._diffs.insert_one(diff_payload)
+
+        policy_notes = self._policy_notes(action, rule_type, matches, expression)
 
         return {
             "id": diff_id,
-            "changes": payload,
-            "policyNotes": self._policy_notes(payload),
+            "matchCount": len(matches),
+            "changes": changes,
+            "policyNotes": policy_notes,
+            "ruleLabel": self.RULE_LABELS.get(rule_type, rule_type),
+            "ruleValue": value if rule_type != "expression" else expression,
         }
 
     def apply(self, diff_id: str, actor: str) -> Dict[str, Any]:
-        if not diff_id:
-            return {"error": "diffId is required."}
-
-        diff_doc = self._diffs.find_one({"_id": diff_id})
-        if not diff_doc:
+        diff = self._diffs.find_one({"_id": diff_id})
+        if not diff:
             return {"error": "Diff not found."}
 
-        changes: List[Dict[str, Any]] = diff_doc.get("payload", [])
+        action = diff.get("action")
+        rule_type = diff.get("ruleType")
+        value = diff.get("value")
+        expression = diff.get("expression")
+        matches_ids: List[str] = diff.get("matches", [])
+
+        if rule_type == "expression" and expression:
+            compiled = self._compile_expression(expression)
+            matches_docs = self._match_users("expression", expression=expression, compiled_expression=compiled)
+        elif rule_type == "user" and value:
+            matches_docs = self._match_users("user", value=value)
+        else:
+            matches_docs = list(self._users.find({"_id": {"$in": matches_ids}})) if matches_ids else []
+            if not matches_docs and rule_type:
+                matches_docs = self._match_users(rule_type, value=value)
+
         before_payload: List[Dict[str, Any]] = []
         after_payload: List[Dict[str, Any]] = []
 
-        for change in changes:
-            op = change.get("op")
-            user_id = change.get("userId")
-            group_id = change.get("groupId")
-            expires_at = change.get("expiresAt")
-
-            if not user_id or not group_id:
-                continue
-
-            membership_filter = {"userId": user_id, "groupId": group_id}
+        for doc in matches_docs:
+            membership_filter = {"userId": doc.get("_id"), "groupId": diff.get("groupId")}
             existing = self._memberships.find_one(membership_filter)
-            normalized_existing = self._normalize_membership(existing)
-            if normalized_existing:
-                before_payload.append(normalized_existing)
 
-            if op == "ADD":
-                membership_doc = {
-                    "_id": existing.get("_id") if existing else f"m_{uuid.uuid4().hex}",
-                    "userId": user_id,
-                    "groupId": group_id,
-                    "flag": change.get("flag", "Include"),
-                    "addedAt": existing.get("addedAt") if existing else dt.datetime.utcnow().isoformat(),
-                    "expiresAt": expires_at,
-                }
-                self._memberships.replace_one(
-                    membership_filter,
-                    membership_doc,
-                    upsert=True,
-                )
-                after_payload.append(self._normalize_membership(membership_doc))
-            elif op == "REMOVE":
+            if existing:
+                before_payload.append(self._normalize_membership(existing))
+
+            if action == "remove":
                 if existing:
-                    self._memberships.delete_one(membership_filter)
-                    after_payload.append({"userId": user_id, "groupId": group_id, "removed": True})
-            else:
+                    self._memberships.delete_one({"_id": existing["_id"]})
                 continue
 
-        audit_id = f"a_{uuid.uuid4().hex}"
+            membership_doc = {
+                "userId": doc.get("_id"),
+                "groupId": diff.get("groupId"),
+                "ruleType": rule_type,
+                "ruleValue": value if rule_type != "expression" else expression,
+                "updatedAt": dt.datetime.utcnow().isoformat(),
+            }
+
+            if existing and existing.get("_id"):
+                membership_doc["_id"] = existing["_id"]
+            else:
+                membership_doc["_id"] = f"m_{uuid.uuid4().hex}"
+                membership_doc["addedAt"] = dt.datetime.utcnow().isoformat()
+
+            self._memberships.replace_one({"_id": membership_doc["_id"]}, membership_doc, upsert=True)
+            after_payload.append(self._normalize_membership(membership_doc))
+
         audit_doc = {
-            "_id": audit_id,
+            "_id": f"a_{uuid.uuid4().hex}",
             "ts": dt.datetime.utcnow().isoformat(),
             "actor": actor,
-            "op": "APPLY",
+            "op": action.upper(),
             "diffId": diff_id,
-            "beforePayload": before_payload,
-            "afterPayload": after_payload,
+            "before": before_payload,
+            "after": after_payload,
             "status": "success",
         }
         self._audit.insert_one(audit_doc)
 
-        return {"ok": True, "auditId": audit_id}
+        return {"ok": True, "auditId": audit_doc["_id"], "applied": len(after_payload), "removed": len(before_payload) if action == "remove" else 0}
 
     def audit(self, limit: int = 100) -> List[Dict[str, Any]]:
         cursor = self._audit.find().sort("ts", DESCENDING).limit(limit)
-        entries: List[Dict[str, Any]] = []
-        for doc in cursor:
-            entries.append(
-                {
-                    "id": str(doc.get("_id")),
-                    "ts": doc.get("ts"),
-                    "actor": doc.get("actor"),
-                    "op": doc.get("op"),
-                    "diffId": doc.get("diffId"),
-                    "status": doc.get("status"),
-                }
-            )
-        return entries
+        return [
+            {
+                "id": doc.get("_id"),
+                "ts": doc.get("ts"),
+                "actor": doc.get("actor"),
+                "op": doc.get("op"),
+                "diffId": doc.get("diffId"),
+                "status": doc.get("status"),
+            }
+            for doc in cursor
+        ]
+
+    @staticmethod
+    def _normalize_membership(doc: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "id": doc.get("_id"),
+            "userId": doc.get("userId"),
+            "groupId": doc.get("groupId"),
+            "ruleType": doc.get("ruleType"),
+            "ruleValue": doc.get("ruleValue"),
+            "addedAt": doc.get("addedAt"),
+            "updatedAt": doc.get("updatedAt"),
+        }

@@ -27,21 +27,42 @@
           <select id="demoAction">
             <option value="add" selected>Add</option>
             <option value="remove">Remove</option>
+            <option value="edit">Edit</option>
           </select>
         </div>
         <div class="demo-field">
           <label for="demoRuleSelect">Rule</label>
           <select id="demoRuleSelect">
-            <option value="User">User</option>
-            <option value="Tree">Tree</option>
-            <option value="Location">Location</option>
+            <option value="user">User</option>
+            <option value="tree">Org Unit</option>
+            <option value="location">Location</option>
+            <option value="role">Role / Job Title</option>
+            <option value="employment-type">Employment Type</option>
+            <option value="tag">Tag / Attribute</option>
+            <option value="directory-group">Directory Group</option>
+            <option value="tenure-window">Tenure Window</option>
+            <option value="manager">Manager / Team Lead</option>
+            <option value="saved-filter">Saved Filter</option>
+            <option value="expression">Dynamic Expression</option>
           </select>
         </div>
-        <div class="demo-field">
+        <div id="valueFieldContainer" class="demo-field">
           <label for="demoValueSelect">Value</label>
           <select id="demoValueSelect">
             <option value="" selected disabled>Select a value...</option>
           </select>
+        </div>
+      </div>
+
+      <div id="expressionDrawer" class="expression-drawer hidden">
+        <label for="expressionInput">Expression</label>
+        <textarea id="expressionInput" placeholder='Example: employmentType == "Contractor" AND contains(tags, "Responder")'></textarea>
+        <p class="expression-hint">
+          Available fields: employmentType, location, role, department, tags, directoryGroups, manager, tenureDays.
+          Use AND / OR / NOT and the contains(list, value) helper.
+        </p>
+        <div class="expression-actions">
+          <button id="expressionValidateBtn" type="button" class="btn btn--ghost">Validate Expression</button>
         </div>
       </div>
 
