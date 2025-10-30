@@ -45,7 +45,14 @@
         </div>
       </div>
 
-      <div class="demo-summary">
+      <div class="demo-actions">
+        <button id="demoProposeBtn" type="button" class="btn btn--primary">Propose</button>
+        <button id="demoApplyBtn" type="button" class="btn btn--primary" disabled>Confirm</button>
+        <button id="toggleLogsBtn" type="button" class="btn btn--ghost log-btn">Show Logs</button>
+      </div>
+
+      <section class="demo-summary">
+        <h2>List Status</h2>
         <table>
           <thead>
             <tr>
@@ -60,13 +67,7 @@
             </tr>
           </tbody>
         </table>
-      </div>
-
-      <div class="demo-actions">
-        <button id="demoProposeBtn" type="button" class="btn btn--primary">Propose</button>
-        <button id="demoApplyBtn" type="button" class="btn btn--primary" disabled>Confirm</button>
-        <button id="toggleLogsBtn" type="button" class="btn btn--ghost log-btn">Show Logs</button>
-      </div>
+      </section>
 
       <div id="demoProposeResult" class="demo-preview hidden">
         <p class="demo-preview-title">Preview Changes</p>

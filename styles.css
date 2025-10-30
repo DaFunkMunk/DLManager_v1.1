@@ -116,6 +116,20 @@ body {
   gap: 12px;
 }
 
+.demo-summary,
+.demo-audit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.demo-summary h2,
+.demo-audit h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #007880;
+}
+
 .demo-summary table,
 .demo-audit table {
   width: 100%;
@@ -148,6 +162,7 @@ body {
 .demo-audit tbody tr:nth-child(even) {
   background: #f4fafb;
 }
+
 
 .status-empty {
   text-align: center;
@@ -187,17 +202,11 @@ body {
   font-size: 13px;
 }
 
-.demo-audit h2 {
-  margin: 0;
-  font-size: 18px;
-  color: #007880;
-}
-
 .log-panel {
   position: fixed;
   top: 0;
   right: 0;
-  width: 360px;
+  width: 1200px;
   height: 100vh;
   background: #0f172a;
   color: #e2e8f0;
@@ -228,12 +237,13 @@ body {
 
 .log-panel-close {
   background: transparent;
-  color: #e2e8f0;
+  color: #ffffff;
   border-color: #475569;
 }
 
 .log-panel-close:hover {
   background: rgba(148, 163, 184, 0.25);
+  color: black;
 }
 
 #logContent {
