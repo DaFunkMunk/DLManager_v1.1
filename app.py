@@ -192,7 +192,7 @@ def api_apply():
 
 
 
-@app.post('/api/expression/validate')
+@app.route('/api/expression/validate', methods=['POST'])
 def api_validate_expression():
     adapter = get_directory_adapter()
     body = request.get_json(force=True, silent=True) or {}

@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+ï»¿document.addEventListener("DOMContentLoaded", () => {
   const demoGroupSelect = document.getElementById("demoGroupSelect");
   const demoAction = document.getElementById("demoAction");
   const demoRuleSelect = document.getElementById("demoRuleSelect");
@@ -14,11 +14,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const demoResult = document.getElementById("demoProposeResult");
   const demoResultList = document.getElementById("demoResultList");
   const demoPolicyNotes = document.getElementById("demoPolicyNotes");
-  const demoAuditBody = document.getElementById("demoAuditBody");
+  const toggleAuditBtn = document.getElementById("toggleAuditBtn");
   const toggleLogsBtn = document.getElementById("toggleLogsBtn");
   const hideLogsBtn = document.getElementById("hideLogsBtn");
+  const hideAuditBtn = document.getElementById("hideAuditBtn");
   const logPanel = document.getElementById("logPanel");
+  const auditPanel = document.getElementById("auditPanel");
   const logContent = document.getElementById("logContent");
+  const auditContent = document.getElementById("auditContent");
 
   const RULE_LABELS = {
     user: "User",
@@ -158,34 +161,46 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderAudit(entries) {
-    demoAuditBody.innerHTML = "";
-    if (!Array.isArray(entries) || entries.length === 0) {
-      const row = document.createElement("tr");
-      row.innerHTML = '<td colspan="4" class="status-empty">No audit entries yet.</td>';
-      demoAuditBody.appendChild(row);
+    if (!auditContent) {
       return;
     }
 
-    entries.forEach(entry => {
-      const row = document.createElement("tr");
-      const ts = entry.ts ? new Date(entry.ts).toLocaleString() : "—";
-      row.innerHTML = `
-        <td>${ts}</td>
-        <td>${entry.actor || "system"}</td>
-        <td>${entry.op || "-"}</td>
-        <td>${entry.status || "-"}</td>
-      `;
-      demoAuditBody.appendChild(row);
-    });
-  }
+    if (!Array.isArray(entries) || entries.length === 0) {
+      auditContent.innerHTML = '<p class="status-empty">No audit entries yet.</p>';
+      return;
+    }
 
+    const markup = entries.map(entry => {
+      const timestamp = entry.ts ? new Date(entry.ts).toLocaleString() : '-';
+      const actor = entry.actor || 'system';
+      const operation = entry.op || '-';
+      const status = (entry.status || '-').toString().toUpperCase();
+
+      return `
+        <article class="audit-entry">
+          <div class="audit-entry__meta">
+            <span>${actor}</span>
+            <span>${timestamp}</span>
+          </div>
+          <p class="audit-entry__details">${operation}</p>
+          <span class="audit-entry__status">${status}</span>
+        </article>
+      `;
+    }).join("");
+
+    auditContent.innerHTML = markup;
+  }
   function loadAudit() {
     apiFetch("/api/audit")
       .then(res => res.json())
       .then(renderAudit)
-      .catch(err => console.error("Failed to load audit log", err));
+      .catch(err => {
+        console.error("Failed to load audit log", err);
+        if (auditContent) {
+          auditContent.innerHTML = '<p class="status-empty">Failed to load audit log.</p>';
+        }
+      });
   }
-
   function loadLogs() {
     apiFetch("/api/logs")
       .then(res => res.text())
@@ -199,13 +214,44 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function toggleLogs() {
+    if (!logPanel) {
+      return;
+    }
+
     const showing = logPanel.classList.toggle("show");
-    toggleLogsBtn.textContent = showing ? "Hide Logs" : "Show Logs";
+    if (toggleLogsBtn) {
+      toggleLogsBtn.textContent = showing ? "Hide Logs" : "Show Logs";
+    }
     if (showing) {
       loadLogs();
+      if (auditPanel && auditPanel.classList.contains("show")) {
+        auditPanel.classList.remove("show");
+        if (toggleAuditBtn) {
+          toggleAuditBtn.textContent = "Audit Trail";
+        }
+      }
     }
   }
 
+  function toggleAudit() {
+    if (!auditPanel) {
+      return;
+    }
+
+    const showing = auditPanel.classList.toggle("show");
+    if (toggleAuditBtn) {
+      toggleAuditBtn.textContent = showing ? "Hide Audit" : "Audit Trail";
+    }
+    if (showing) {
+      loadAudit();
+      if (logPanel && logPanel.classList.contains("show")) {
+        logPanel.classList.remove("show");
+        if (toggleLogsBtn) {
+          toggleLogsBtn.textContent = "Show Logs";
+        }
+      }
+    }
+  }
   function getSelectLabel(selectEl) {
     if (!selectEl) return "";
     const option = selectEl.options[selectEl.selectedIndex];
@@ -263,14 +309,14 @@ document.addEventListener("DOMContentLoaded", () => {
         ? change.expression
         : (change.ruleValueLabel || change.ruleValue || "");
       const userLabel = change.userDisplayName || change.userEmail || "(group)";
-      const valuePart = valueLabel ? ` · ${valueLabel}` : "";
+      const valuePart = valueLabel ? ` - ${valueLabel}` : "";
       li.textContent = `${action} ${userLabel} (${ruleLabel}${valuePart})`;
       demoResultList.appendChild(li);
     });
 
     if (diff.matchCount && diff.changes.length > diff.matchCount) {
       const li = document.createElement("li");
-      li.textContent = `… and ${diff.matchCount - diff.changes.length} more matches.`;
+      li.textContent = `... and ${diff.matchCount - diff.changes.length} more matches.`;
       demoResultList.appendChild(li);
     }
 
@@ -298,7 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    demoStatus.textContent = "Validating expression…";
+    demoStatus.textContent = "Validating expression.";
     demoStatus.className = "demo-status demo-status--info";
 
     apiFetch("/api/expression/validate", {
@@ -312,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
           demoStatus.className = "demo-status demo-status--error";
           return;
         }
-        demoStatus.textContent = `Expression valid · Matches ${result.matches} user${result.matches === 1 ? "" : "s"}.`;
+        demoStatus.textContent = `Expression valid. Matches ${result.matches} user${result.matches === 1 ? "" : "s"}.`;
         demoStatus.className = "demo-status demo-status--success";
       })
       .catch(err => {
@@ -346,7 +392,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    demoStatus.textContent = "Requesting preview…";
+    demoStatus.textContent = "Requesting preview.";
     demoStatus.className = "demo-status demo-status--info";
 
     const payload = {
@@ -396,7 +442,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    demoStatus.textContent = "Applying change…";
+    demoStatus.textContent = "Applying change.";
     demoStatus.className = "demo-status demo-status--info";
     demoApplyBtn.disabled = true;
 
@@ -440,10 +486,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   demoProposeBtn.addEventListener("click", handlePropose);
   demoApplyBtn.addEventListener("click", handleApply);
-  toggleLogsBtn.addEventListener("click", toggleLogs);
+
+  if (toggleAuditBtn) {
+    toggleAuditBtn.addEventListener("click", toggleAudit);
+  }
+
+  if (toggleLogsBtn) {
+    toggleLogsBtn.addEventListener("click", toggleLogs);
+  }
+
+  if (hideAuditBtn) {
+    hideAuditBtn.addEventListener("click", () => {
+      if (auditPanel && auditPanel.classList.contains("show")) {
+        toggleAudit();
+      }
+    });
+  }
+
   if (hideLogsBtn) {
     hideLogsBtn.addEventListener("click", () => {
-      if (logPanel.classList.contains("show")) {
+      if (logPanel && logPanel.classList.contains("show")) {
         toggleLogs();
       }
     });

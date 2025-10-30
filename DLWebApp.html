@@ -15,110 +15,107 @@
         <div id="demoStatus" class="demo-status demo-status--info">Select a group to begin.</div>
       </header>
 
-      <div class="demo-form">
-        <div class="demo-field demo-field--full">
-          <label for="demoGroupSelect">Group</label>
-          <select id="demoGroupSelect">
-            <option value="" selected disabled>Select a group...</option>
-          </select>
+      <div class="demo-main-grid">
+        <div class="demo-main-grid__left">
+          <div class="demo-form">
+            <div class="demo-field demo-field--full">
+              <label for="demoGroupSelect">Group</label>
+              <select id="demoGroupSelect">
+                <option value="" selected disabled>Select a group...</option>
+              </select>
+            </div>
+            <div class="demo-field">
+              <label for="demoAction">Action</label>
+              <select id="demoAction">
+                <option value="add" selected>Add</option>
+                <option value="remove">Remove</option>
+                <option value="edit">Edit</option>
+              </select>
+            </div>
+            <div class="demo-field">
+              <label for="demoRuleSelect">Rule</label>
+              <select id="demoRuleSelect">
+                <option value="user">User</option>
+                <option value="tree">Org Unit</option>
+                <option value="location">Location</option>
+                <option value="role">Role / Job Title</option>
+                <option value="employment-type">Employment Type</option>
+                <option value="tag">Tag / Attribute</option>
+                <option value="directory-group">Directory Group</option>
+                <option value="tenure-window">Tenure Window</option>
+                <option value="manager">Manager / Team Lead</option>
+                <option value="saved-filter">Saved Filter</option>
+                <option value="expression">Dynamic Expression</option>
+              </select>
+            </div>
+            <div id="valueFieldContainer" class="demo-field">
+              <label for="demoValueSelect">Value</label>
+              <select id="demoValueSelect">
+                <option value="" selected disabled>Select a value...</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="expressionDrawer" class="expression-drawer hidden">
+            <label for="expressionInput">Expression</label>
+            <textarea id="expressionInput" placeholder='Example: employmentType == "Contractor" AND contains(tags, "Responder")'></textarea>
+            <p class="expression-hint">
+              Available fields: employmentType, location, role, department, tags, directoryGroups, manager, tenureDays.
+              Use AND / OR / NOT and the contains(list, value) helper.
+            </p>
+            <div class="expression-actions">
+              <button id="expressionValidateBtn" type="button" class="btn btn--ghost">Validate Expression</button>
+            </div>
+          </div>
+
+          <div class="demo-actions">
+            <button id="demoProposeBtn" type="button" class="btn btn--primary">Propose</button>
+            <button id="demoApplyBtn" type="button" class="btn btn--primary" disabled>Confirm</button>
+            <button id="toggleAuditBtn" type="button" class="btn btn--ghost audit-btn">Audit Trail</button>
+            <button id="toggleLogsBtn" type="button" class="btn btn--ghost log-btn">Show Logs</button>
+          </div>
+
+          <div id="demoProposeResult" class="demo-preview hidden">
+            <p class="demo-preview-title">Preview Changes</p>
+            <ul id="demoResultList"></ul>
+            <div class="demo-policy hidden">
+              <strong>Policy Notes</strong>
+              <ul id="demoPolicyNotes"></ul>
+            </div>
+          </div>
+
         </div>
-        <div class="demo-field">
-          <label for="demoAction">Action</label>
-          <select id="demoAction">
-            <option value="add" selected>Add</option>
-            <option value="remove">Remove</option>
-            <option value="edit">Edit</option>
-          </select>
-        </div>
-        <div class="demo-field">
-          <label for="demoRuleSelect">Rule</label>
-          <select id="demoRuleSelect">
-            <option value="user">User</option>
-            <option value="tree">Org Unit</option>
-            <option value="location">Location</option>
-            <option value="role">Role / Job Title</option>
-            <option value="employment-type">Employment Type</option>
-            <option value="tag">Tag / Attribute</option>
-            <option value="directory-group">Directory Group</option>
-            <option value="tenure-window">Tenure Window</option>
-            <option value="manager">Manager / Team Lead</option>
-            <option value="saved-filter">Saved Filter</option>
-            <option value="expression">Dynamic Expression</option>
-          </select>
-        </div>
-        <div id="valueFieldContainer" class="demo-field">
-          <label for="demoValueSelect">Value</label>
-          <select id="demoValueSelect">
-            <option value="" selected disabled>Select a value...</option>
-          </select>
-        </div>
+
+        <section class="demo-summary">
+          <h2>List Status</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Rule</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody id="demoSummaryBody">
+              <tr>
+                <td colspan="3" class="status-empty">Select a group to see the pending change.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
       </div>
-
-      <div id="expressionDrawer" class="expression-drawer hidden">
-        <label for="expressionInput">Expression</label>
-        <textarea id="expressionInput" placeholder='Example: employmentType == "Contractor" AND contains(tags, "Responder")'></textarea>
-        <p class="expression-hint">
-          Available fields: employmentType, location, role, department, tags, directoryGroups, manager, tenureDays.
-          Use AND / OR / NOT and the contains(list, value) helper.
-        </p>
-        <div class="expression-actions">
-          <button id="expressionValidateBtn" type="button" class="btn btn--ghost">Validate Expression</button>
-        </div>
-      </div>
-
-      <div class="demo-actions">
-        <button id="demoProposeBtn" type="button" class="btn btn--primary">Propose</button>
-        <button id="demoApplyBtn" type="button" class="btn btn--primary" disabled>Confirm</button>
-        <button id="toggleLogsBtn" type="button" class="btn btn--ghost log-btn">Show Logs</button>
-      </div>
-
-      <section class="demo-summary">
-        <h2>List Status</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Action</th>
-              <th>Rule</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody id="demoSummaryBody">
-            <tr>
-              <td colspan="3" class="status-empty">Select a group to see the pending change.</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      <div id="demoProposeResult" class="demo-preview hidden">
-        <p class="demo-preview-title">Preview Changes</p>
-        <ul id="demoResultList"></ul>
-        <div class="demo-policy hidden">
-          <strong>Policy Notes</strong>
-          <ul id="demoPolicyNotes"></ul>
-        </div>
-      </div>
-
-      <section class="demo-audit">
-        <h2>Audit Trail</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>When</th>
-              <th>Actor</th>
-              <th>Operation</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="demoAuditBody">
-            <tr>
-              <td colspan="4" class="status-empty">No audit entries yet.</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
     </section>
   </main>
+
+  <aside id="auditPanel" class="audit-panel">
+    <div class="audit-panel-header">
+      <h2>Audit Trail</h2>
+      <button id="hideAuditBtn" type="button" class="btn audit-panel-close">Hide Audit</button>
+    </div>
+    <div id="auditContent" class="audit-panel-content">
+      <p class="status-empty">No audit entries yet.</p>
+    </div>
+  </aside>
 
   <aside id="logPanel" class="log-panel">
     <div class="log-panel-header">
