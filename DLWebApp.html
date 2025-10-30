@@ -3,209 +3,104 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DL Manager</title>
+  <title>Distribution List Copilot</title>
   <link rel="stylesheet" href="styles.css">
-  <!-- ✅ Tom Select CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
+  <script defer src="/app.js"></script>
 </head>
 <body>
-  <div class="container">
+  <main class="copilot-wrapper">
+    <section id="demoPanel" class="demo-panel">
+      <header class="demo-panel-header">
+        <h1>Distribution List Copilot</h1>
+        <div id="demoStatus" class="demo-status demo-status--info">Select a group to begin.</div>
+      </header>
 
-    <div class="header-bar">
-        <div class="containerlogo">
-          <img src="Coterra-Logo.png" alt="Banner" class="top-banner" width="200" height="40" />
+      <div class="demo-form">
+        <div class="demo-field demo-field--full">
+          <label for="demoGroupSelect">Group</label>
+          <select id="demoGroupSelect">
+            <option value="" selected disabled>Select a group...</option>
+          </select>
+        </div>
+        <div class="demo-field">
+          <label for="demoAction">Action</label>
+          <select id="demoAction">
+            <option value="add" selected>Add</option>
+            <option value="remove">Remove</option>
+          </select>
+        </div>
+        <div class="demo-field">
+          <label for="demoRuleSelect">Rule</label>
+          <select id="demoRuleSelect">
+            <option value="User">User</option>
+            <option value="Tree">Tree</option>
+            <option value="Location">Location</option>
+          </select>
+        </div>
+        <div class="demo-field">
+          <label for="demoValueSelect">Value</label>
+          <select id="demoValueSelect">
+            <option value="" selected disabled>Select a value...</option>
+          </select>
         </div>
       </div>
-      
 
-      <div class="containertitle">
-        <h1>Distribution List Manager</h1>
+      <div class="demo-summary">
+        <table>
+          <thead>
+            <tr>
+              <th>Action</th>
+              <th>Rule</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="demoSummaryBody">
+            <tr>
+              <td colspan="3" class="status-empty">Select a group to see the pending change.</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <div id="spinnerContainer">
-        <div id="spinner" class="spinner" style="display: none;"></div>
-        <div id="spinnerStatus" class="spinner-status hidden"></div>
+      <div class="demo-actions">
+        <button id="demoProposeBtn" type="button" class="btn btn--primary">Propose</button>
+        <button id="demoApplyBtn" type="button" class="btn btn--primary" disabled>Confirm</button>
+        <button id="toggleLogsBtn" type="button" class="btn btn--ghost log-btn">Show Logs</button>
       </div>
 
-    <div>
-      <label for="listSelect" style="margin-left: 5px; font-size: 16px;font-weight: bold; color: #000000;">List:</label>
-    </div>
-
-    <select id="listSelect"></select>
-
-    <div class="tables-container">
-      <!-- LEFT SIDE -->
-      <div class="main-table-box">
-        <div class="rules-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 100px;">Flag</th>
-                <th style="width: 100px;">Rule Type</th>
-                <th style="width: 300px;">Value</th>
-              </tr>
-            </thead>
-            <tbody id="rulesTable"></tbody>
-          </table>
-        </div>
-
-        <!-- ANCHORED CONTROL BLOCK -->
-        <div class="button-block">
-          <div class="control-row">
-            <select id="flagSelect" style="width: 115px; margin-left: 5px;">
-              <option>Include</option>
-              <option>Exclude</option>
-            </select>
-
-            <select id="ruleTypeSelect" style="width: 115px; margin-left: 20px;">
-              <option>User</option>
-              <option>Tree</option>
-              <option>Location</option>
-            </select>
-
-            <div style="margin-left: 20px; ">
-                <select id="valeSelect" style="width: 350px;">
-                    <option value="" selected disabled hidden>Name</option>
-                </select>
-            </div>
-          
-        </div>
-
-        <div>
-
-          <div class="control-row" style="margin-top: 25px; margin-left: 100px;">
-            <button id="addrulebutton" onclick="addRule()" style="margin-right: 20px; background-color: white;">Add Rule</button>
-            <button onclick="deleteRule()" style="background-color: white;">Delete Rule</button>
-            <button onclick="applyRules()" style="margin-left: 220px; background-color: white;">Apply Rules</button>
-          </div>
-
-          <div class="control-row" style="margin-left: 510px; margin-top: -5px; width: 150px;">
-            <button onclick="refreshAD()" style="background-color: white;">Refresh from AD</button>
-          </div>
-
-          <div class="control-row" style="margin-left: 130px; margin-top: -40px;">
-            <button onclick="previewList()" style="background-color: white;"> Full Preview List</button>
-          </div>
+      <div id="demoProposeResult" class="demo-preview hidden">
+        <p class="demo-preview-title">Preview Changes</p>
+        <ul id="demoResultList"></ul>
+        <div class="demo-policy hidden">
+          <strong>Policy Notes</strong>
+          <ul id="demoPolicyNotes"></ul>
         </div>
       </div>
-      <button id="toggleLogsBtn" onclick="toggleLogs()" style="margin-top: 20px; margin-left: 550px;">Show Logs</button>
-    </div>
 
-      <!-- RIGHT SIDE -->
-      <div class="preview-right">
-        <div class="preview-layout">
-          <div class="preview-stack">
-            <div class="preview-label-container">
-              <strong id="previewLabel">Full List Preview:</strong>
-            </div>
-            <div class="preview-box">
-              <div class="preview-scroll">
-                <table id="previewTable">
-                  <thead>
-                    <tr><th style="width: 340px;">Name</th></tr>
-                  </thead>
-                  <tbody id="previewList"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-          <div class="demo-column">
-            <div class="mode-toggle">
-              <label class="switch">
-                <input type="checkbox" id="modeCheckbox" aria-label="Toggle Demo Mode">
-                <span class="slider"></span>
-              </label>
-              <span id="modeLabel">Mode: Standard</span>
-            </div>
-            <div id="demoPanel" class="demo-panel">
-            <div class="demo-panel-header">
-              <h2>Distribution List Copilot</h2>
-              <div id="demoStatus" class="demo-status demo-status--info"></div>
-            </div>
-            <div class="demo-form">
-              <div class="demo-field demo-field--full">
-                <label for="demoGroupSelect">Group</label>
-                <select id="demoGroupSelect">
-                  <option value="" selected disabled>Select a group...</option>
-                </select>
-              </div>
-              <div class="demo-field">
-                <label for="demoAction">Action</label>
-                <select id="demoAction">
-                  <option value="add" selected>Add</option>
-                  <option value="remove">Remove</option>
-                </select>
-              </div>
-              <div class="demo-field">
-                <label for="demoRuleSelect">Rule</label>
-                <select id="demoRuleSelect">
-                  <option value="User">User</option>
-                  <option value="Tree">Tree</option>
-                  <option value="Location">Location</option>
-                </select>
-              </div>
-              <div class="demo-field">
-                <label for="demoValueSelect">Value</label>
-                <select id="demoValueSelect">
-                  <option value="" selected disabled>Select a value...</option>
-                </select>
-              </div>
+      <section class="demo-audit">
+        <h2>Audit Trail</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Actor</th>
+              <th>Operation</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="demoAuditBody">
+            <tr>
+              <td colspan="4" class="status-empty">No audit entries yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </section>
+  </main>
 
-            </div>
-            <div class="demo-actions">
-              <button id="demoProposeBtn" type="button">Propose</button>
-              <button id="demoApplyBtn" type="button" disabled>Confirm</button>
-            </div>
-            <div class="demo-summary">
-              <h3>List Status</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Action</th>
-                    <th>Rule</th>
-                    <th>Value</th>
-                  </tr>
-                </thead>
-                <tbody id="demoSummaryBody"></tbody>
-              </table>
-            </div>
-            <div id="demoProposeResult" class="demo-preview hidden">
-              <p class="demo-preview-title">Preview Changes</p>
-              <ul id="demoResultList"></ul>
-              <div class="demo-policy hidden">
-                <strong>Policy Notes</strong>
-                <ul id="demoPolicyNotes"></ul>
-              </div>
-            </div>
-            <div class="demo-audit">
-              <h3>Audit Trail</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>When</th>
-                    <th>Actor</th>
-                    <th>Operation</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="demoAuditBody"></tbody>
-              </table>
-            </div>
-          </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="logPanel" class="log-panel">
-      <h3>Activity Log</h3>
-      <button id="toggleLogsBtn" onclick="toggleLogs()" style="margin-top: 20px; margin-left: 0px;">Hide Logs</button>
-  <pre id="logContent"></pre>
-  </div>
-
-  <!-- ✅ Tom Select JS -->
-  <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
-  <script src="/app.js"></script>
+  <aside id="logPanel" class="log-panel">
+    <h2>Activity Log</h2>
+    <pre id="logContent"></pre>
+  </aside>
 </body>
 </html>

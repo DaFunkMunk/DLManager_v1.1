@@ -1,363 +1,148 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const listSelect = document.getElementById("listSelect");
-  const rulesTable = document.getElementById("rulesTable");
-  const flagSelect = document.getElementById("flagSelect");
-  const ruleTypeSelect = document.getElementById("ruleTypeSelect");
-  const valueSelect = document.getElementById("valeSelect");
+  const demoGroupSelect = document.getElementById("demoGroupSelect");
   const demoAction = document.getElementById("demoAction");
   const demoRuleSelect = document.getElementById("demoRuleSelect");
   const demoValueSelect = document.getElementById("demoValueSelect");
-  const demoGroupSelect = document.getElementById("demoGroupSelect");
+  const demoProposeBtn = document.getElementById("demoProposeBtn");
+  const demoApplyBtn = document.getElementById("demoApplyBtn");
+  const demoStatus = document.getElementById("demoStatus");
   const demoSummaryBody = document.getElementById("demoSummaryBody");
+  const demoResult = document.getElementById("demoProposeResult");
+  const demoResultList = document.getElementById("demoResultList");
+  const demoPolicyNotes = document.getElementById("demoPolicyNotes");
+  const demoAuditBody = document.getElementById("demoAuditBody");
+  const toggleLogsBtn = document.getElementById("toggleLogsBtn");
+  const logPanel = document.getElementById("logPanel");
+  const logContent = document.getElementById("logContent");
 
-  function showSpinner() {
-    document.getElementById("spinner").style.display = "block";
-    const status = document.getElementById("spinnerStatus");
-    status.classList.add("hidden");
-    status.classList.remove("success", "error", "fade-out");
-  }
+  let currentDiffId = null;
 
-  function showSpinnerSuccess() {
-    const spinner = document.getElementById("spinner");
-    const status = document.getElementById("spinnerStatus");
-
-    spinner.style.display = "none";
-    status.textContent = "ï¿½o\"";
-    status.classList.remove("hidden", "error", "fade-out");
-    status.classList.add("success");
-
-    setTimeout(() => {
-      status.classList.add("fade-out");
-      setTimeout(() => {
-        status.classList.add("hidden");
-        status.classList.remove("fade-out", "success", "error");
-      }, 1000);
-    }, 15000);
-  }
-
-  function showSpinnerError() {
-    const spinner = document.getElementById("spinner");
-    const status = document.getElementById("spinnerStatus");
-
-    spinner.style.display = "none";
-    status.textContent = "ï¿½o";
-    status.classList.remove("hidden", "success", "fade-out");
-    status.classList.add("error");
-
-    setTimeout(() => {
-      status.classList.add("fade-out");
-      setTimeout(() => {
-        status.classList.add("hidden");
-        status.classList.remove("fade-out", "success", "error");
-      }, 1000);
-    }, 15000);
-  }
-
-  function hideSpinner() {
-    document.getElementById("spinner").style.display = "none";
-    const status = document.getElementById("spinnerStatus");
-    status.classList.add("hidden");
-    status.classList.remove("success", "error", "fade-out");
-  }
-
-  fetch('/api/lists')
-    .then(res => res.json())
-    .then(data => {
-      listSelect.innerHTML = "";
-      data.forEach(name => {
-        const opt = document.createElement("option");
-        opt.value = name;
-        opt.textContent = name;
-        listSelect.appendChild(opt);
-      });
-
-      if (data.length > 0) {
-        listSelect.value = data[0];
-        loadRules(data[0]);
-        loadPreview(data[0]);
-      }
-    });
-
-  fetch('/api/employees')
-    .then(res => res.json())
-    .then(data => {
-      valueSelect.innerHTML = "";
-
-      const placeholder = document.createElement("option");
-      placeholder.value = "";
-      placeholder.textContent = "Select an employee...";
-      placeholder.disabled = true;
-      placeholder.selected = true;
-      valueSelect.appendChild(placeholder);
-
-      data.forEach(emp => {
-        const opt = document.createElement("option");
-        opt.textContent = emp.name;
-        opt.value = emp.name;
-        valueSelect.appendChild(opt);
-      });
-
-      if (!valueSelect.tomselect) {
-        new TomSelect("#valeSelect", {
-          create: false,
-          placeholder: "Name",
-          sortField: {
-            field: "text",
-            direction: "asc"
-          },
-          dropdownDirection: 'down'
-        });
-      }
-    });
-
-  ruleTypeSelect.addEventListener("change", () => {
-    if (valueSelect.tomselect) {
-      valueSelect.tomselect.destroy();
+  const apiFetch = (url, options = {}) => {
+    const config = { ...options };
+    const headers = new Headers(options.headers || {});
+    if (config.body && !headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
     }
-    const selectedType = ruleTypeSelect.value;
-    valueSelect.innerHTML = "";
+    headers.set("X-Mode", "demo");
+    config.headers = headers;
+    return fetch(url, config);
+  };
 
-    if (selectedType === "Location") {
-      fetch("/api/locations")
-        .then(res => res.json())
-        .then(data => {
-          const placeholder = document.createElement("option");
-          placeholder.textContent = "Select a location...";
-          placeholder.disabled = true;
-          placeholder.selected = true;
-          valueSelect.appendChild(placeholder);
-
-          data.forEach(loc => {
-            const opt = document.createElement("option");
-            opt.textContent = loc;
-            opt.value = loc;
-            valueSelect.appendChild(opt);
-          });
-        });
-    } else {
-      fetch("/api/employees")
-        .then(res => res.json())
-        .then(data => {
-          const placeholder = document.createElement("option");
-          placeholder.textContent = "Select an employee...";
-          placeholder.disabled = true;
-          placeholder.selected = true;
-          valueSelect.appendChild(placeholder);
-
-          data.forEach(emp => {
-            const opt = document.createElement("option");
-            opt.textContent = emp.name;
-            opt.value = emp.name;
-            valueSelect.appendChild(opt);
-          });
-
-          if (!valueSelect.tomselect) {
-            new TomSelect("#valeSelect", {
-              create: false,
-              placeholder: "Name",
-              sortField: {
-                field: "text",
-                direction: "asc"
-              },
-              dropdownDirection: 'down'
-            });
-          }
-        });
-    }
-  });
-
-  listSelect.addEventListener("change", () => {
-    const selectedName = listSelect.value;
-    loadRules(selectedName);
-    loadPreview(selectedName);
-  });
-
-  function loadRules(dlName) {
-    fetch(`/api/rules/${encodeURIComponent(dlName)}`)
+  function populateGroups() {
+    apiFetch("/api/groups")
       .then(res => res.json())
-      .then(data => {
-        rulesTable.innerHTML = "";
-        data.forEach(rule => {
-          addRuleToTable(rule.Flag, rule.RuleType, rule.Value, dlName);
-        });
-      });
-  }
-
-  function loadPreview(dlName) {
-    fetch(`/api/preview/${encodeURIComponent(dlName)}`)
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("previewLabel").textContent = "Full List Preview:";
-        const previewList = document.getElementById("previewList");
-        previewList.innerHTML = "";
-        data.forEach(name => {
-          const row = document.createElement("tr");
-          row.innerHTML = `<td>${name}</td>`;
-          previewList.appendChild(row);
-        });
-      });
-  }
-
-  function addRuleToTable(flag, type, value, dlName = null) {
-    const row = document.createElement("tr");
-    row.innerHTML = `<td>${flag}</td><td>${type}</td><td>${value}</td>`;
-
-    const isTree = type === 'Tree';
-    if (isTree) {
-      row.classList.add("tree-row");
-    }
-
-    row.addEventListener("click", () => {
-      const isSelected = row.classList.contains("selected");
-      rulesTable.querySelectorAll("tr").forEach(r => r.classList.remove("selected", "non-tree-row"));
-
-      if (!isSelected) {
-        if (isTree) {
-          row.classList.add("selected", "tree-row");
-          if (dlName) {
-            fetch(`/api/treepreview/${encodeURIComponent(dlName)}/${encodeURIComponent(value)}`)
-              .then(res => res.json())
-              .then(data => {
-                document.getElementById("previewLabel").textContent = "Tree Preview:";
-                const previewList = document.getElementById("previewList");
-                previewList.innerHTML = "";
-                data.forEach(name => {
-                  const treeRow = document.createElement("tr");
-                  treeRow.innerHTML = `<td>${name}</td>`;
-                  previewList.appendChild(treeRow);
-                });
-              });
-          }
-        } else {
-          row.classList.add("selected", "non-tree-row");
+      .then(groups => {
+        demoGroupSelect.innerHTML = '<option value="" disabled selected>Select a group...</option>';
+        if (!Array.isArray(groups)) {
+          return;
         }
-      }
-    });
-
-    rulesTable.appendChild(row);
+        groups.forEach(group => {
+          const opt = document.createElement("option");
+          opt.value = group.name || group.id;
+          opt.textContent = group.name || group.id;
+          demoGroupSelect.appendChild(opt);
+        });
+      })
+      .catch(err => console.error("Failed to load groups", err));
   }
 
-  window.addRule = function () {
-    const flag = flagSelect.value;
-    const type = ruleTypeSelect.value;
-    const value = valueSelect.value;
-    const dlName = listSelect.value;
+  function populateValues(rule) {
+    const isLocation = rule === "Location";
+    const endpoint = isLocation ? "/api/locations" : "/api/employees";
 
-    if (!flag || !type || !value) {
-      alert("Please select a Flag, Rule Type, and Value before adding a rule.");
+    apiFetch(endpoint)
+      .then(res => res.json())
+      .then(values => {
+        demoValueSelect.innerHTML = '<option value="" disabled selected>Select a value...</option>';
+        if (!Array.isArray(values)) {
+          return;
+        }
+        if (isLocation) {
+          values.forEach(loc => {
+            const opt = document.createElement("option");
+            opt.value = loc;
+            opt.textContent = loc;
+            demoValueSelect.appendChild(opt);
+          });
+        } else {
+          values.forEach(emp => {
+            const opt = document.createElement("option");
+            opt.value = emp.name || emp.displayName || "";
+            opt.textContent = emp.name || emp.displayName || emp.id;
+            demoValueSelect.appendChild(opt);
+          });
+        }
+      })
+      .catch(err => console.error("Failed to load values", err))
+      .finally(updateSummary);
+  }
+
+  function renderAudit(entries) {
+    demoAuditBody.innerHTML = "";
+    if (!Array.isArray(entries) || entries.length === 0) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 4;
+      cell.className = "status-empty";
+      cell.textContent = "No audit entries yet.";
+      row.appendChild(cell);
+      demoAuditBody.appendChild(row);
       return;
     }
 
-    addRuleToTable(flag, type, value);
-
-    fetch('/api/addrule', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ flag, type, value, dlName })
-    })
-    .then(res => res.json())
-    .then(data => {
-      const logDetails = { flag, type, value, dlName };
-      if (data.success) {
-        logMessage("/api/addrule", "POST", 200, logDetails);
-      } else {
-        logMessage("/api/addrule", "POST", 500, logDetails);
-        alert('Failed to add rule to database.');
-      }
+    entries.forEach(entry => {
+      const row = document.createElement("tr");
+      const ts = entry.ts ? new Date(entry.ts).toLocaleString() : "—";
+      row.innerHTML = `
+        <td>${ts}</td>
+        <td>${entry.actor || "system"}</td>
+        <td>${entry.op || "-"}</td>
+        <td>${entry.status || "-"}</td>
+      `;
+      demoAuditBody.appendChild(row);
     });
-  };
+  }
 
-  window.deleteRule = function () {
-    const selectedRow = rulesTable.querySelector("tr.selected");
+  function loadAudit() {
+    apiFetch("/api/audit")
+      .then(res => res.json())
+      .then(renderAudit)
+      .catch(err => console.error("Failed to load audit log", err));
+  }
 
-    if (!selectedRow) {
-      alert("Please select a row to delete.");
-      return;
-    }
-
-    const flag = selectedRow.children[0].textContent;
-    const type = selectedRow.children[1].textContent;
-    const value = selectedRow.children[2].textContent;
-    const dlName = listSelect.value;
-
-    selectedRow.remove();
-
-    fetch('/api/deleterule', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ flag, type, value, dlName })
-    })
-    .then(res => res.json())
-    .then(data => {
-      const logDetails = { flag, type, value, dlName };
-      if (data.success) {
-        logMessage("/api/deleterule", "POST", 200, logDetails);
-      } else {
-        logMessage("/api/deleterule", "POST", 500, logDetails);
-        alert('Failed to delete rule from database.');
-      }
-    });
-  };
-
-  window.toggleLogs = function () {
-    const panel = document.getElementById("logPanel");
-    const isOpen = panel.classList.contains("show");
-    panel.classList.toggle("show");
-    document.getElementById("toggleLogsBtn").textContent = isOpen ? "Show Logs" : "Hide Logs";
-
-    if (!isOpen) {
-      loadPersistentLogs();
-    }
-  };
-
-  function loadPersistentLogs() {
-    fetch("/api/logs")
+  function loadLogs() {
+    apiFetch("/api/logs")
       .then(res => res.text())
       .then(text => {
-        const logEl = document.getElementById("logContent");
-        logEl.textContent = text;
-        logEl.scrollTop = logEl.scrollHeight;
+        logContent.textContent = text || "(empty)";
+        logContent.scrollTop = logContent.scrollHeight;
+      })
+      .catch(err => {
+        logContent.textContent = `Failed to load logs: ${err.message}`;
       });
   }
 
-  function logMessage(endpoint, method = "GET", status = 200, details = null) {
-    const logEl = document.getElementById("logContent");
-    const now = new Date();
-
-    const ip = "127.0.0.1";
-    const date = now.toLocaleDateString("en-GB", {
-      day: "2-digit", month: "short", year: "numeric"
-    }).replace(/ /g, '/');
-
-    const time = now.toLocaleTimeString("en-GB", { hour12: false });
-    let message = `${ip} - - [${date} ${time}] "${method} ${endpoint} HTTP/1.1" ${status} -`;
-
-    if (details) {
-      const detailStr = JSON.stringify(details, null, 2).replace(/\n/g, ' ').replace(/\s+/g, ' ');
-      message += `\n  ï¿½+' Details: ${detailStr}`;
+  function toggleLogs() {
+    const showing = logPanel.classList.toggle("show");
+    toggleLogsBtn.textContent = showing ? "Hide Logs" : "Show Logs";
+    if (showing) {
+      loadLogs();
     }
-
-    logEl.textContent += message + "\n";
-    logEl.scrollTop = logEl.scrollHeight;
   }
 
-  function getSelectDisplay(selectEl) {
-    if (!selectEl) return "";
-    const option = selectEl.options[selectEl.selectedIndex] || null;
-    if (!option || option.disabled) {
-      return "";
-    }
+  function getSelectLabel(select) {
+    if (!select) return "";
+    const option = select.options[select.selectedIndex];
+    if (!option || option.disabled) return "";
     return option.textContent.trim();
   }
 
-  function updateDemoSummary() {
-    if (!demoSummaryBody) {
-      return;
-    }
+  function updateSummary() {
+    if (!demoSummaryBody) return;
     demoSummaryBody.innerHTML = "";
 
-    const groupText = getSelectDisplay(demoGroupSelect);
-    if (!groupText) {
+    const groupLabel = getSelectLabel(demoGroupSelect);
+    if (!groupLabel) {
       const row = document.createElement("tr");
       const cell = document.createElement("td");
       cell.colSpan = 3;
@@ -368,77 +153,155 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const actionText = getSelectDisplay(demoAction) || (demoAction ? demoAction.value : "");
-    const ruleText = getSelectDisplay(demoRuleSelect) || (demoRuleSelect ? demoRuleSelect.value : "");
-    const valueText = getSelectDisplay(demoValueSelect) || "Not selected";
+    const actionLabel = getSelectLabel(demoAction) || demoAction.value;
+    const ruleLabel = getSelectLabel(demoRuleSelect) || demoRuleSelect.value;
+    const valueLabel = getSelectLabel(demoValueSelect) || "(not selected)";
 
     const row = document.createElement("tr");
-    row.innerHTML = `<td>${actionText}</td><td>${ruleText}</td><td>${valueText}</td>`;
+    row.innerHTML = `<td>${actionLabel}</td><td>${ruleLabel}</td><td>${valueLabel}</td>`;
     demoSummaryBody.appendChild(row);
   }
 
-  [demoAction, demoRuleSelect, demoValueSelect, demoGroupSelect].forEach(control => {
-    if (control) {
-      control.addEventListener("change", updateDemoSummary);
-    }
-  });
-  updateDemoSummary();
-
-  window.previewList = function () {
-    const dlName = document.getElementById("listSelect").value;
-    loadPreview(dlName);
-  };
-
-  // ï¿½o. APPLY RULES button logic with spinner
-  window.applyRules = function () {
-    showSpinner();
-    fetch('/api/applyrules', { method: 'POST' })
-      .then(res => res.json())
-      .then(data => {
-        const details = { triggeredBy: sessionStorage.getItem("user") || "unknown" };
-        if (data.success) {
-          logMessage("/api/applyrules", "POST", 200, details);
-          alert("Rules applied successfully.");
-          showSpinnerSuccess();
-        } else {
-          logMessage("/api/applyrules", "POST", 500, details);
-          alert("Failed to apply rules: " + data.error);
-          showSpinnerError();
-        }
-      })
-      .catch(err => {
-        alert("Unexpected error: " + err.message);
-        showSpinnerError();
-      });
-  };
-  // ï¿½o. REFRESH AD button logic with spinner
-  window.refreshAD = function () {
-    showSpinner();
-    fetch('/api/refreshad', { method: 'POST' })
-      .then(res => res.json())
-      .then(data => {
-        const details = { triggeredBy: sessionStorage.getItem("user") || "unknown" };
-        if (data.success) {
-          logMessage("/api/refreshad", "POST", 200, details);
-          alert("Active Directory refreshed successfully.");
-          showSpinnerSuccess();
-        } else {
-          logMessage("/api/refreshad", "POST", 500, details);
-          alert("Failed to refresh from AD: " + data.error);
-          showSpinnerError();
-        }
-      })
-      .catch(err => {
-        alert("Unexpected error: " + err.message);
-        showSpinnerError();
-      });
-  };
-});
-
-function toggleDemoPanel(enabled) {
-  const panel = document.getElementById("demoPanel");
-  if (!panel) {
-    return;
+  function clearPreview() {
+    currentDiffId = null;
+    demoApplyBtn.disabled = true;
+    demoResult.classList.add("hidden");
+    demoResultList.innerHTML = "";
+    demoPolicyNotes.innerHTML = "";
+    demoPolicyNotes.parentElement.classList.add("hidden");
   }
-  panel.classList.toggle("demo-panel--active", enabled);
-}
+
+  function renderPreview(diff) {
+    if (!diff || !Array.isArray(diff.changes) || diff.changes.length === 0) {
+      clearPreview();
+      return;
+    }
+
+    demoResultList.innerHTML = "";
+    diff.changes.forEach(change => {
+      const li = document.createElement("li");
+      const action = change.op === "REMOVE" ? "Remove" : "Add";
+      const expires = change.expiresAt ? ` (expires ${new Date(change.expiresAt).toLocaleDateString()})` : "";
+      li.textContent = `${action} ${change.userDisplayName || change.userId} in ${change.groupName || change.groupId}${expires}`;
+      demoResultList.appendChild(li);
+    });
+
+    demoPolicyNotes.innerHTML = "";
+    if (Array.isArray(diff.policyNotes) && diff.policyNotes.length > 0) {
+      diff.policyNotes.forEach(note => {
+        const li = document.createElement("li");
+        li.textContent = note;
+        demoPolicyNotes.appendChild(li);
+      });
+      demoPolicyNotes.parentElement.classList.remove("hidden");
+    } else {
+      demoPolicyNotes.parentElement.classList.add("hidden");
+    }
+
+    demoResult.classList.remove("hidden");
+    demoApplyBtn.disabled = false;
+  }
+
+  function handlePropose() {
+    const groupValue = demoGroupSelect.value;
+    const value = demoValueSelect.value;
+
+    if (!groupValue) {
+      demoStatus.textContent = "Choose a group before proposing a change.";
+      demoStatus.className = "demo-status demo-status--error";
+      return;
+    }
+
+    if (!value) {
+      demoStatus.textContent = "Select a value for the chosen rule.";
+      demoStatus.className = "demo-status demo-status--error";
+      return;
+    }
+
+    demoStatus.textContent = "Requesting preview…";
+    demoStatus.className = "demo-status demo-status--info";
+
+    const intent = {
+      action: demoAction.value,
+      user: value,
+      group: groupValue
+    };
+
+    apiFetch("/api/propose", {
+      method: "POST",
+      body: JSON.stringify(intent)
+    })
+      .then(res => res.json())
+      .then(diff => {
+        if (diff.error) {
+          demoStatus.textContent = diff.error;
+          demoStatus.className = "demo-status demo-status--error";
+          clearPreview();
+          return;
+        }
+        currentDiffId = diff.id;
+        renderPreview(diff);
+        demoStatus.textContent = "Preview ready. Review the change, then confirm.";
+        demoStatus.className = "demo-status demo-status--success";
+      })
+      .catch(err => {
+        console.error("Failed to propose change", err);
+        demoStatus.textContent = "Failed to request preview.";
+        demoStatus.className = "demo-status demo-status--error";
+        clearPreview();
+      });
+  }
+
+  function handleApply() {
+    if (!currentDiffId) {
+      demoStatus.textContent = "Generate a preview before confirming.";
+      demoStatus.className = "demo-status demo-status--error";
+      return;
+    }
+
+    demoApplyBtn.disabled = true;
+    demoStatus.textContent = "Applying change…";
+    demoStatus.className = "demo-status demo-status--info";
+
+    apiFetch("/api/apply", {
+      method: "POST",
+      body: JSON.stringify({ diffId: currentDiffId })
+    })
+      .then(res => res.json())
+      .then(result => {
+        if (result.error) {
+          demoStatus.textContent = result.error;
+          demoStatus.className = "demo-status demo-status--error";
+          demoApplyBtn.disabled = false;
+          return;
+        }
+        demoStatus.textContent = "Change applied.";
+        demoStatus.className = "demo-status demo-status--success";
+        clearPreview();
+        loadAudit();
+      })
+      .catch(err => {
+        console.error("Failed to apply change", err);
+        demoStatus.textContent = "Failed to apply change.";
+        demoStatus.className = "demo-status demo-status--error";
+        demoApplyBtn.disabled = false;
+      });
+  }
+
+  populateGroups();
+  populateValues(demoRuleSelect.value);
+  loadAudit();
+  updateSummary();
+
+  demoGroupSelect.addEventListener("change", updateSummary);
+  demoAction.addEventListener("change", updateSummary);
+  demoRuleSelect.addEventListener("change", () => {
+    populateValues(demoRuleSelect.value);
+    updateSummary();
+  });
+  demoValueSelect.addEventListener("change", updateSummary);
+
+  demoProposeBtn.addEventListener("click", handlePropose);
+  demoApplyBtn.addEventListener("click", handleApply);
+  toggleLogsBtn.addEventListener("click", toggleLogs);
+});
