@@ -4,6 +4,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const flagSelect = document.getElementById("flagSelect");
   const ruleTypeSelect = document.getElementById("ruleTypeSelect");
   const valueSelect = document.getElementById("valeSelect");
+  const demoAction = document.getElementById("demoAction");
+  const demoRuleSelect = document.getElementById("demoRuleSelect");
+  const demoValueSelect = document.getElementById("demoValueSelect");
+  const demoGroupSelect = document.getElementById("demoGroupSelect");
+  const demoSummaryBody = document.getElementById("demoSummaryBody");
 
   function showSpinner() {
     document.getElementById("spinner").style.display = "block";
@@ -336,6 +341,49 @@ document.addEventListener("DOMContentLoaded", () => {
     logEl.scrollTop = logEl.scrollHeight;
   }
 
+  function getSelectDisplay(selectEl) {
+    if (!selectEl) return "";
+    const option = selectEl.options[selectEl.selectedIndex] || null;
+    if (!option || option.disabled) {
+      return "";
+    }
+    return option.textContent.trim();
+  }
+
+  function updateDemoSummary() {
+    if (!demoSummaryBody) {
+      return;
+    }
+    demoSummaryBody.innerHTML = "";
+
+    const groupText = getSelectDisplay(demoGroupSelect);
+    if (!groupText) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 3;
+      cell.className = "status-empty";
+      cell.textContent = "Select a group to see the pending change.";
+      row.appendChild(cell);
+      demoSummaryBody.appendChild(row);
+      return;
+    }
+
+    const actionText = getSelectDisplay(demoAction) || (demoAction ? demoAction.value : "");
+    const ruleText = getSelectDisplay(demoRuleSelect) || (demoRuleSelect ? demoRuleSelect.value : "");
+    const valueText = getSelectDisplay(demoValueSelect) || "Not selected";
+
+    const row = document.createElement("tr");
+    row.innerHTML = `<td>${actionText}</td><td>${ruleText}</td><td>${valueText}</td>`;
+    demoSummaryBody.appendChild(row);
+  }
+
+  [demoAction, demoRuleSelect, demoValueSelect, demoGroupSelect].forEach(control => {
+    if (control) {
+      control.addEventListener("change", updateDemoSummary);
+    }
+  });
+  updateDemoSummary();
+
   window.previewList = function () {
     const dlName = document.getElementById("listSelect").value;
     loadPreview(dlName);
@@ -386,3 +434,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   };
 });
+
+function toggleDemoPanel(enabled) {
+  const panel = document.getElementById("demoPanel");
+  if (!panel) {
+    return;
+  }
+  panel.classList.toggle("demo-panel--active", enabled);
+}

@@ -301,6 +301,11 @@ body {
   font-size: 0.9rem;
 }
 
+.demo-field--full select {
+  width: 100%;
+  max-width: none;
+}
+
 .demo-field--full {
   grid-column: 1 / -1;
 }
@@ -321,6 +326,10 @@ body {
   .demo-actions {
     display: flex;
     gap: 10px;
+  }
+
+  .demo-summary {
+    margin-top: 12px;
   }
 
   .demo-preview {
@@ -361,17 +370,34 @@ body {
     color: #007880;
   }
 
+  .demo-summary table,
   .demo-audit table {
+    width: 100%;
     background: #ffffff;
     border-radius: 8px;
+    border: 1px solid #e4e8ee;
+    border-collapse: collapse;
     overflow: hidden;
   }
 
+  .demo-summary th,
   .demo-audit th {
     background: #007880;
     color: #ffffff;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 9px 12px;
   }
 
+  .demo-summary td,
+  .demo-audit td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #edf1f7;
+    font-size: 13px;
+  }
+
+  .demo-summary tbody tr:nth-child(even),
   .demo-audit tbody tr:nth-child(even) {
     background: #f2f6f7;
   }
