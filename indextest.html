@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DL Manager</title>
+  <link rel="stylesheet" href="stylestest.css">
+</head>
+<body>
+  <div class="container">
+
+    <img src="Coterra-Logo.png" alt="Banner" class="top-banner" width="200" height="40" />
+    <h1>Distribution List Manager</h1>
+
+    <div>
+      <label for="listSelect" style="margin-left: 5px;">List:</label>
+    </div>
+
+    <select id="listSelect"></select>
+
+    <div class="tables-container">
+      <!-- LEFT SIDE -->
+      <div class="main-table-box">
+        <div class="scrollable-table">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 100px;">Flag</th>
+                <th style="width: 100px;">Rule Type</th>
+                <th style="width: 300px;">Value</th>
+              </tr>
+            </thead>
+            <tbody id="rulesTable">
+              <!-- JavaScript will populate rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ANCHORED CONTROL BLOCK -->
+        <div class="button-block">
+          <div class="control-row">
+            <select id="flagSelect" style="width: 115px; margin-left: 5px;">
+              <option>Include</option>
+              <option>Exclude</option>
+            </select>
+
+            <select id="ruleTypeSelect" style="width: 115px; margin-left: 20px;">
+              <option>User</option>
+              <option>Tree</option>
+              <option>Location</option>
+            </select>
+
+            <select id="valeSelect" style="width: 330px; margin-left: 20px;">
+              <option>Name</option>
+            </select>
+          </div>
+
+          <div class="control-row" style="margin-top: 25px; margin-left: 100px;">
+            <button id="addrulebutton" onclick="addRule()" style="margin-right: 20px; background-color: white;">Add Rule</button>
+            <button onclick="deleteRule()" style="background-color: white;">Delete Rule</button>
+            <button style="margin-left: 220px; background-color: white;">Apply Rules</button>
+          </div>
+
+          <div class="control-row" style="margin-left: 510px; margin-top: 10px; width: 150px;">
+            <button style="background-color: white;">Refresh from AD</button>
+          </div>
+
+          <!-- ✅ Preview List button restored -->
+          <div class="control-row" style="margin-left: 150px; margin-top: -50px;">
+            <button onclick="previewList()" style="background-color: white;">Preview List</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDE -->
+      <div class="preview-right">
+        <div class="preview-label-container">
+          <strong id="previewLabel">Full List Preview:</strong>
+        </div>
+        <div class="preview-box">
+          <div class="scrollable-table">
+            <table id="previewTable">
+              <thead>
+                <tr><th style="width: 300px;">Name</th></tr>
+              </thead>
+              <tbody id="previewList">
+                <!-- Names will go here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

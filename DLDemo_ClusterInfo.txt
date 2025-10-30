@@ -1,0 +1,4 @@
+username: ngpend2_db_user
+password: W2zEyGnDkeNVzdkJ
+connectionString: mongodb+srv://ngpend2_db_user:W2zEyGnDkeNVzdkJ@cluster0.0xwxm4l.mongodb.net/?appName=Cluster0 
+python3Executable: python -m pip install "pymongo[srv]"

@@ -1,0 +1,128 @@
+body {
+    font-family: sans-serif;
+    background: linear-gradient(to bottom right, #eee, #ccc); /* light raised background */
+    margin: 40px;
+    text-align: center;
+  }
+  
+  .container {
+    background: #e0e0e0;
+    padding: 25px 30px;
+    border-radius: 12px;
+    box-shadow:
+      inset 3px 3px 6px rgba(0, 0, 0, 0.25),   /* inner bottom-right shadow */
+      inset -3px -3px 6px rgba(255, 255, 255, 0.6); /* inner top-left highlight */
+    max-width: 1200px;
+    margin: 0 auto;
+    border: 1px solid #bbb;
+    box-shadow:
+    inset 3px 3px 6px rgba(0, 0, 0, 0.25),
+    inset -3px -3px 6px rgba(255, 255, 255, 0.6),
+    0 4px 10px rgba(0, 0, 0, 0.08);  /* outer shadow */
+  }
+  
+  h1 {
+    text-align: center;
+    color: rgb(0, 120, 128);
+  }
+  
+  select,
+  input[type="text"] {
+    padding: 5px;
+    margin: 5px;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0px;
+    box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  table, th, td {
+    border: 1px solid #ccc;
+  }
+  
+  th, td {
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .tables-container {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    margin-top: 20px;
+  }
+  
+  .main-table-box {
+    flex: 2;
+  }
+  
+  .preview-box {
+    flex: 1;
+    padding-left: 0;
+  }
+  
+  .preview-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: -18px;
+  }
+  
+  .scrollable-table {
+    max-height: 1000px;
+    overflow-y: auto;
+    border: 1px solid #ffffff;
+    background-color: #ffffff;
+    border-radius: 10px;
+  }
+  
+  /* Anchored control section */
+  .button-block {
+    margin-top: 10px;
+  }
+  
+  .control-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  /* Tree row visual indicator */
+  .tree-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  .tree-row:hover {
+    background-color: #333;
+    color: #fff;
+  }
+  
+  button {
+    border: 1px solid #888;
+    border-radius: 6px;
+    padding: 6px 14px;
+    background: linear-gradient(to bottom, #ffffff, #ffffff);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    font-weight: 500;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  
+  button:hover {
+    background: linear-gradient(to bottom, #d4d2d2, #d4d2d2);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+  }
+  
+  /* Preview label */
+  .preview-label-container {
+    margin-bottom: 4px;
+    margin-left: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #444;
+  }
+  

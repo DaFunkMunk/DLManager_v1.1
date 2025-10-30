@@ -1,0 +1,4 @@
+Flask>=2.3
+pyodbc
+pymongo>=4.10
+dnspython>=2.6
