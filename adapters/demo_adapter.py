@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Dict, List, Optional, Callable, Iterable
 
 from pymongo import ASCENDING, DESCENDING, MongoClient
 from pymongo.collection import Collection
@@ -66,6 +66,7 @@ class DemoAdapter(DirectoryAdapter):
         "directoryGroups",
         "manager",
         "tenureDays",
+        "orgUnit",
         "active",
     }
 
@@ -333,6 +334,9 @@ class DemoAdapter(DirectoryAdapter):
             "employmentType": 1,
             "manager": 1,
             "tags": 1,
+            "directoryGroups": 1,
+            "tenureDays": 1,
+            "orgUnit": 1,
         }
 
         cursor = self._users.find(criteria, projection).sort("displayName", ASCENDING)
@@ -347,6 +351,9 @@ class DemoAdapter(DirectoryAdapter):
                 "employmentType": doc.get("employmentType"),
                 "manager": doc.get("manager"),
                 "tags": doc.get("tags", []),
+                "directoryGroups": doc.get("directoryGroups", []),
+                "tenureDays": doc.get("tenureDays", 0),
+                "orgUnit": doc.get("orgUnit"),
             }
             for doc in cursor
         ]
@@ -379,6 +386,7 @@ class DemoAdapter(DirectoryAdapter):
             "directoryGroups": doc.get("directoryGroups", []),
             "manager": doc.get("manager"),
             "tenureDays": doc.get("tenureDays", 0),
+            "orgUnit": doc.get("orgUnit"),
             "active": bool(doc.get("active", True)),
         }
 
@@ -483,7 +491,8 @@ class DemoAdapter(DirectoryAdapter):
             return [doc] if doc else []
 
         if rule_type == "tree":
-            return list(self._users.find({"department": value}))
+            query = {"$or": [{"orgUnit": value}, {"department": value}]}
+            return list(self._users.find(query))
 
         if rule_type == "location":
             return list(self._users.find({"location": value}))
@@ -600,12 +609,30 @@ class DemoAdapter(DirectoryAdapter):
                 return {"error": str(exc)}
 
         try:
-            matches = self._match_users(rule_type, value=value, expression=expression, compiled_expression=compiled_expression)
+            matches = self._match_users(
+                rule_type,
+                value=value,
+                expression=expression,
+                compiled_expression=compiled_expression,
+            )
         except ValueError as exc:
             return {"error": str(exc)}
 
+        policy_notes = self._policy_notes(action, rule_type, matches, expression)
+        match_names = [
+            doc.get("displayName")
+            for doc in matches
+            if doc.get("displayName")
+        ]
+
         changes = [
-            self._preview_change(action, rule_type, value if rule_type != "expression" else None, expression if rule_type == "expression" else None, doc)
+            self._preview_change(
+                action,
+                rule_type,
+                value if rule_type != "expression" else None,
+                expression if rule_type == "expression" else None,
+                doc,
+            )
             for doc in matches
         ]
 
@@ -614,16 +641,18 @@ class DemoAdapter(DirectoryAdapter):
             "_id": diff_id,
             "action": action,
             "ruleType": rule_type,
+            "ruleLabel": self.RULE_LABELS.get(rule_type, rule_type),
             "groupId": group_doc.get("_id"),
             "groupName": group_doc.get("name"),
             "value": value if rule_type != "expression" else None,
             "expression": expression if rule_type == "expression" else None,
             "matches": [doc.get("_id") for doc in matches],
+            "matchCount": len(matches),
+            "matchNames": match_names,
+            "policyNotes": policy_notes,
             "createdAt": dt.datetime.utcnow().isoformat(),
         }
         self._diffs.insert_one(diff_payload)
-
-        policy_notes = self._policy_notes(action, rule_type, matches, expression)
 
         return {
             "id": diff_id,
@@ -634,6 +663,39 @@ class DemoAdapter(DirectoryAdapter):
             "ruleValue": value if rule_type != "expression" else expression,
         }
 
+    def _user_name_map(self, user_ids: Iterable[str]) -> Dict[str, str]:
+        unique_ids = {uid for uid in user_ids if uid}
+        if not unique_ids:
+            return {}
+        cursor = self._users.find({"_id": {"$in": list(unique_ids)}}, {"displayName": 1})
+        return {doc["_id"]: doc.get("displayName") for doc in cursor}
+
+    def _summarize_memberships(self, entries: List[Dict[str, Any]], names_map: Dict[str, str]) -> Dict[str, Any]:
+        if not entries:
+            return {"count": 0, "names": [], "rules": []}
+
+        names: List[str] = []
+        for entry in entries:
+            name = names_map.get(entry.get("userId"))
+            if name and name not in names:
+                names.append(name)
+
+        rules: List[str] = []
+        seen_rules: set = set()
+        for entry in entries:
+            rule_type = entry.get("ruleType") or ""
+            rule_value = entry.get("ruleValue") or ""
+            label = self.RULE_LABELS.get(rule_type, rule_type)
+            rule_str = f"{label}: {rule_value}" if rule_value else label
+            if rule_str not in seen_rules:
+                seen_rules.add(rule_str)
+                rules.append(rule_str)
+
+        return {
+            "count": len(entries),
+            "names": names[:5],
+            "rules": rules[:3],
+        }
     def apply(self, diff_id: str, actor: str) -> Dict[str, Any]:
         diff = self._diffs.find_one({"_id": diff_id})
         if not diff:
@@ -687,14 +749,41 @@ class DemoAdapter(DirectoryAdapter):
             self._memberships.replace_one({"_id": membership_doc["_id"]}, membership_doc, upsert=True)
             after_payload.append(self._normalize_membership(membership_doc))
 
+        user_ids = [entry.get("userId") for entry in before_payload + after_payload if entry.get("userId")]
+        names_map = self._user_name_map(user_ids)
+
+        summary_before = self._summarize_memberships(before_payload, names_map)
+        summary_after = self._summarize_memberships(after_payload, names_map)
+
+        policy_notes = diff.get("policyNotes", [])
+        match_count = diff.get("matchCount", summary_after.get("count", 0))
+        match_names = diff.get("matchNames") or summary_after.get("names", [])
+        rule_label = diff.get("ruleLabel") or self.RULE_LABELS.get(rule_type, rule_type)
+        rule_value_display = expression if rule_type == "expression" else value
+
         audit_doc = {
             "_id": f"a_{uuid.uuid4().hex}",
             "ts": dt.datetime.utcnow().isoformat(),
             "actor": actor,
             "op": action.upper(),
             "diffId": diff_id,
+            "groupId": diff.get("groupId"),
+            "groupName": diff.get("groupName"),
+            "rule": {
+                "type": rule_type,
+                "label": rule_label,
+                "value": rule_value_display,
+                "expression": expression if rule_type == "expression" else None,
+            },
             "before": before_payload,
             "after": after_payload,
+            "summary": {
+                "before": summary_before,
+                "after": summary_after,
+            },
+            "matchCount": match_count,
+            "matchNames": (match_names[:5] if match_names else []),
+            "policyNotes": policy_notes,
             "status": "success",
         }
         self._audit.insert_one(audit_doc)
@@ -709,8 +798,17 @@ class DemoAdapter(DirectoryAdapter):
                 "ts": doc.get("ts"),
                 "actor": doc.get("actor"),
                 "op": doc.get("op"),
-                "diffId": doc.get("diffId"),
                 "status": doc.get("status"),
+                "diffId": doc.get("diffId"),
+                "groupId": doc.get("groupId"),
+                "groupName": doc.get("groupName"),
+                "rule": doc.get("rule", {}),
+                "summary": doc.get("summary", {}),
+                "matchCount": doc.get("matchCount"),
+                "matchNames": doc.get("matchNames", []),
+                "policyNotes": doc.get("policyNotes", []),
+                "before": doc.get("before", []),
+                "after": doc.get("after", []),
             }
             for doc in cursor
         ]

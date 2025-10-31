@@ -1,4 +1,4 @@
-﻿document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", () => {
   const demoGroupSelect = document.getElementById("demoGroupSelect");
   const demoAction = document.getElementById("demoAction");
   const demoRuleSelect = document.getElementById("demoRuleSelect");
@@ -248,17 +248,52 @@
     const markup = entries.map(entry => {
       const timestamp = entry.ts ? new Date(entry.ts).toLocaleString() : '-';
       const actor = entry.actor || 'system';
-      const operation = entry.op || '-';
+      const operation = (entry.op || '-').toUpperCase();
       const status = (entry.status || '-').toString().toUpperCase();
+      const group = entry.groupName || entry.groupId || '(unknown group)';
+      const rule = entry.rule || {};
+      const ruleLabel = rule.label || rule.type || 'Rule';
+      const ruleValue = rule.expression || rule.value || '(none)';
+      const summary = entry.summary || {};
+      const after = summary.after || {};
+      const before = summary.before || {};
+      const matchCount = entry.matchCount ?? after.count ?? 0;
+      const matchNames = (entry.matchNames && entry.matchNames.length ? entry.matchNames : after.names || []).slice(0, 5);
+      const affectedNames = matchNames.join(', ');
+      const affectedLine = matchCount
+        ? `${matchCount} member${matchCount === 1 ? '' : 's'}${affectedNames ? ` (${affectedNames})` : ''}`
+        : 'No members affected.';
+      const beforeNames = (before.names || []).slice(0, 5).join(', ');
+      const beforeLine = before.count
+        ? `${before.count} previously${beforeNames ? ` (${beforeNames})` : ''}`
+        : 'No previous memberships.';
+      const beforeRules = (before.rules || []).join('; ');
+      const afterRules = (after.rules || []).join('; ') || ruleValue;
+      const policyNotes = Array.isArray(entry.policyNotes) && entry.policyNotes.length
+        ? `<ul class="audit-entry__notes">${entry.policyNotes.map(note => `<li>${note}</li>`).join('')}</ul>`
+        : '';
 
       return `
         <article class="audit-entry">
-          <div class="audit-entry__meta">
-            <span>${actor}</span>
-            <span>${timestamp}</span>
+          <header class="audit-entry__meta">
+            <div class="audit-entry__meta-left">
+              <span class="audit-entry__actor">${actor}</span>
+              <span class="audit-entry__operation">${operation}</span>
+            </div>
+            <div class="audit-entry__timestamp">
+              <span>${timestamp}</span>
+              <span class="audit-entry__status">${status}</span>
+            </div>
+          </header>
+          <div class="audit-entry__body">
+            <p class="audit-entry__group">${group}</p>
+            <p class="audit-entry__rule"><strong>${ruleLabel}:</strong> ${ruleValue}</p>
+            ${beforeRules ? `<p class="audit-entry__rule audit-entry__rule--before"><strong>Previously:</strong> ${beforeRules}</p>` : ''}
+            ${afterRules ? `<p class="audit-entry__rule audit-entry__rule--after"><strong>Result:</strong> ${afterRules}</p>` : ''}
+            <p class="audit-entry__summary"><strong>Affected:</strong> ${affectedLine}</p>
+            <p class="audit-entry__summary"><strong>Prior:</strong> ${beforeLine}</p>
+            ${policyNotes}
           </div>
-          <p class="audit-entry__details">${operation}</p>
-          <span class="audit-entry__status">${status}</span>
         </article>
       `;
     }).join("");

@@ -408,24 +408,86 @@ body {
 .audit-entry__meta {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 12px;
-  font-size: 13px;
+}
+
+.audit-entry__meta-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.audit-entry__actor {
   font-weight: 600;
   color: #1f2d3d;
 }
 
-.audit-entry__details {
-  margin: 6px 0 0;
+.audit-entry__operation {
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.audit-entry__timestamp {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #64748b;
+  text-align: right;
+}
+
+.audit-entry__status {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
+.audit-entry__body {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   font-size: 13px;
   color: #475569;
 }
 
-.audit-entry__status {
-  margin-top: 8px;
-  font-size: 12px;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
+.audit-entry__group {
+  margin: 0;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.audit-entry__rule {
+  margin: 0;
+}
+
+.audit-entry__rule--before {
+  color: #b45309;
+}
+
+.audit-entry__rule--after {
   color: #0f766e;
+}
+
+.audit-entry__summary {
+  margin: 0;
+  font-size: 12px;
+  color: #475569;
+}
+
+.audit-entry__notes {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.audit-entry__notes li {
+  margin-bottom: 2px;
 }
 
 .audit-panel-content .status-empty {
