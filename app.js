@@ -17,6 +17,9 @@
   const runPromptBtn = document.getElementById("runPromptBtn");
   const dlcPromptInput = document.getElementById("dlcPromptInput");
   const promptStatus = document.getElementById("promptStatus");
+  const currentUserEl = document.getElementById("currentUser");
+  const currentUserNameEl = currentUserEl ? currentUserEl.querySelector(".meta-user__name") : null;
+  const logoutBtn = document.getElementById("logoutBtn");
   const toggleAuditBtn = document.getElementById("toggleAuditBtn");
   const toggleLogsBtn = document.getElementById("toggleLogsBtn");
   const hideLogsBtn = document.getElementById("hideLogsBtn");
@@ -323,6 +326,33 @@
       });
   }
 
+  function loadCurrentUser() {
+    if (!currentUserEl) {
+      return;
+    }
+
+    apiFetch("/api/me")
+      .then(res => {
+        if (res.status === 401) {
+          window.location.href = "/login";
+          return null;
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (!data || !data.authenticated) {
+          return;
+        }
+        if (currentUserNameEl && data.user) {
+          currentUserNameEl.textContent = data.user;
+        }
+        currentUserEl.classList.add("meta-user--visible");
+      })
+      .catch(() => {
+        currentUserEl.classList.remove("meta-user--visible");
+      });
+  }
+
   function toggleLogs() {
     if (!logPanel) {
       return;
@@ -525,8 +555,17 @@
       method: "POST",
       body: JSON.stringify(payload)
     })
-      .then(res => res.json())
+      .then(res => {
+        if (res.status === 401) {
+          window.location.href = "/login";
+          return null;
+        }
+        return res.json();
+      })
       .then(diff => {
+        if (!diff) {
+          return;
+        }
         if (diff.error) {
           demoStatus.textContent = diff.error;
           demoStatus.className = "demo-status demo-status--error";
@@ -560,8 +599,17 @@
       method: "POST",
       body: JSON.stringify({ diffId: currentDiffId })
     })
-      .then(res => res.json())
+      .then(res => {
+        if (res.status === 401) {
+          window.location.href = "/login";
+          return null;
+        }
+        return res.json();
+      })
       .then(result => {
+        if (!result) {
+          return;
+        }
         if (result.error) {
           demoStatus.textContent = result.error;
           demoStatus.className = "demo-status demo-status--error";
@@ -584,6 +632,7 @@
   populateValues(demoRuleSelect.value || "user");
   loadAudit();
   updateSummary();
+  loadCurrentUser();
 
   demoGroupSelect.addEventListener("change", updateSummary);
   demoAction.addEventListener("change", updateSummary);
@@ -618,6 +667,16 @@
       if (logPanel && logPanel.classList.contains("show")) {
         toggleLogs();
       }
+    });
+  }
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      logoutBtn.disabled = true;
+      apiFetch("/api/logout", { method: "POST" })
+        .catch(() => {})
+        .finally(() => {
+          window.location.href = "/login";
+        });
     });
   }
   if (runPromptBtn) {

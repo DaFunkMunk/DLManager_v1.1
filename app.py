@@ -92,8 +92,16 @@ def get_directory_adapter() -> DirectoryAdapter:
 @app.before_request
 def require_login():
     session.permanent = True
-    if request.endpoint not in ('login', 'get_log_file', 'static', 'serve_banner') and 'user' not in session:
-        return redirect('/login')
+    if 'user' in session:
+        return
+
+    if request.endpoint in ('login', 'get_log_file', 'api_me', 'api_logout', 'static', 'serve_banner'):
+        return
+
+    if request.path.startswith('/api/'):
+        return jsonify({"error": "auth_required"}), 401
+
+    return redirect('/login')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -125,6 +133,20 @@ def get_log_file():
         return "", 200
     with open(LOG_FILE, "r", encoding="utf-8") as f:
         return f.read(), 200
+
+
+@app.route('/api/me')
+def api_me():
+    user = session.get('user')
+    if not user:
+        return jsonify({"authenticated": False}), 401
+    return jsonify({"authenticated": True, "user": user})
+
+
+@app.route('/api/logout', methods=['POST'])
+def api_logout():
+    session.pop('user', None)
+    return jsonify({"ok": True})
 
 @app.route('/Coterra-Logo.png')
 def serve_banner():
@@ -181,6 +203,36 @@ def api_propose():
         return jsonify({"error": str(exc)}), 500
     if "error" in result:
         return jsonify(result), 400
+
+    summary = result.get("summary") or {}
+    timestamp = datetime.datetime.now().strftime("%d/%b/%Y %H:%M:%S")
+    group_name = summary.get("groupName") or summary.get("groupId") or "(unknown)"
+    rule = summary.get("rule") or {}
+    rule_label = rule.get("label") or rule.get("type") or "Rule"
+    rule_value = rule.get("expression") or rule.get("value") or "(none)"
+    added = summary.get("added") or {}
+    removed = summary.get("removed") or {}
+    added_count = added.get("count", 0)
+    removed_count = removed.get("count", 0)
+    added_names = ", ".join(added.get("names", [])) or "-"
+    removed_names = ", ".join(removed.get("names", [])) or "-"
+    policy_notes = summary.get("policyNotes") or []
+    policy_text = "; ".join(policy_notes) if policy_notes else "None"
+
+    log_lines = [
+        f'Group: {group_name}',
+        f'Rule: {rule_label} -> {rule_value}',
+        f'Added: {added_count} ({added_names})',
+        f'Removed: {removed_count} ({removed_names})',
+        f'Audit: {result.get("auditId", "-")}',
+        f'Policy Notes: {policy_text}',
+    ]
+    log_entry = (
+        f'{actor} @ 127.0.0.1 - - [{timestamp}] "POST /api/apply HTTP/1.1" 200 - SUCCESS\n'
+        + "\n".join(f"  {line}" for line in log_lines)
+    )
+    append_to_log(log_entry)
+
     return jsonify(result)
 
 
