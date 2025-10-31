@@ -65,6 +65,37 @@ body {
   resize: vertical;
 }
 
+.demo-prompt__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.demo-prompt__status {
+  min-height: 20px;
+  font-size: 13px;
+  color: #5e6a78;
+}
+
+.demo-prompt__status--error {
+  color: #b91c1c;
+}
+
+.demo-prompt__status--success {
+  color: #0f766e;
+}
+
+.demo-prompt__spinner {
+  display: inline-block;
+  font-family: "Cascadia Mono", "Consolas", monospace;
+  letter-spacing: 4px;
+}
+
+.expression-drawer--highlight {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+}
+
 .demo-panel-header h1 {
   margin: 0;
   font-size: 26px;

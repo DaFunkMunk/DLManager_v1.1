@@ -14,6 +14,9 @@
   const demoResult = document.getElementById("demoProposeResult");
   const demoResultList = document.getElementById("demoResultList");
   const demoPolicyNotes = document.getElementById("demoPolicyNotes");
+  const runPromptBtn = document.getElementById("runPromptBtn");
+  const dlcPromptInput = document.getElementById("dlcPromptInput");
+  const promptStatus = document.getElementById("promptStatus");
   const toggleAuditBtn = document.getElementById("toggleAuditBtn");
   const toggleLogsBtn = document.getElementById("toggleLogsBtn");
   const hideLogsBtn = document.getElementById("hideLogsBtn");
@@ -22,6 +25,7 @@
   const auditPanel = document.getElementById("auditPanel");
   const logContent = document.getElementById("logContent");
   const auditContent = document.getElementById("auditContent");
+  let promptSpinnerInterval = null;
 
   const RULE_LABELS = {
     user: "User",
@@ -86,6 +90,77 @@
     if (visible) {
       demoValueSelect.value = "";
     }
+  }
+  function setPromptStatus(message, type = "info") {
+    if (!promptStatus) {
+      return;
+    }
+
+    promptStatus.className = "demo-prompt__status";
+    if (type === "error") {
+      promptStatus.classList.add("demo-prompt__status--error");
+    } else if (type === "success") {
+      promptStatus.classList.add("demo-prompt__status--success");
+    }
+    promptStatus.textContent = message;
+  }
+
+  function startPromptSpinner() {
+    if (!promptStatus) {
+      return;
+    }
+    setPromptStatus("", "info");
+    promptStatus.classList.add("demo-prompt__spinner");
+
+    const frames = ["/", "|", "\\", "-"];
+    let frameIndex = 0;
+
+    if (promptSpinnerInterval) {
+      clearInterval(promptSpinnerInterval);
+    }
+    promptStatus.textContent = frames[frameIndex];
+    promptSpinnerInterval = setInterval(() => {
+      frameIndex = (frameIndex + 1) % frames.length;
+      promptStatus.textContent = frames[frameIndex];
+    }, 150);
+  }
+
+  function stopPromptSpinner(message = "", type = "info") {
+    if (!promptStatus) {
+      return;
+    }
+    promptStatus.classList.remove("demo-prompt__spinner");
+    if (promptSpinnerInterval) {
+      clearInterval(promptSpinnerInterval);
+      promptSpinnerInterval = null;
+    }
+    setPromptStatus(message, type);
+  }
+
+  function highlightExpressionDrawer(enabled) {
+    if (!expressionDrawer) {
+      return;
+    }
+    expressionDrawer.classList.toggle("expression-drawer--highlight", enabled);
+  }
+
+  function handleRunPrompt() {
+    const prompt = (dlcPromptInput?.value || "").trim();
+    if (!prompt) {
+      highlightExpressionDrawer(false);
+      setPromptStatus("Enter a prompt before running.", "error");
+      return;
+    }
+
+    startPromptSpinner();
+    highlightExpressionDrawer(true);
+    demoRuleSelect.value = "expression";
+    populateValues("expression");
+
+    setTimeout(() => {
+      highlightExpressionDrawer(false);
+      stopPromptSpinner("Prompt ready. Review the expression, then propose.", "success");
+    }, 800);
   }
 
   function populateGroups() {
@@ -507,6 +582,17 @@
     hideLogsBtn.addEventListener("click", () => {
       if (logPanel && logPanel.classList.contains("show")) {
         toggleLogs();
+      }
+    });
+  }
+  if (runPromptBtn) {
+    runPromptBtn.addEventListener("click", handleRunPrompt);
+  }
+  if (dlcPromptInput) {
+    dlcPromptInput.addEventListener("keydown", event => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        handleRunPrompt();
       }
     });
   }
