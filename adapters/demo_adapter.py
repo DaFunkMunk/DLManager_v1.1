@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Callable
 
 from pymongo import ASCENDING, DESCENDING, MongoClient
 from pymongo.collection import Collection
-from pymongo.errors import DuplicateKeyError
+from pymongo.errors import DuplicateKeyError, OperationFailure
 
 from .base import DirectoryAdapter
 
@@ -98,24 +98,31 @@ class DemoAdapter(DirectoryAdapter):
             self.seed_if_empty()
 
     def _ensure_indexes(self) -> None:
-        self._users.create_index([("displayName", ASCENDING)])
-        self._users.create_index([("email", ASCENDING)], unique=True)
-        self._users.create_index([("department", ASCENDING)])
-        self._users.create_index([("location", ASCENDING)])
-        self._users.create_index([("role", ASCENDING)])
-        self._users.create_index([("employmentType", ASCENDING)])
-        self._users.create_index([("tags", ASCENDING)])
-        self._users.create_index([("directoryGroups", ASCENDING)])
-        self._users.create_index([("manager", ASCENDING)])
+        index_specs = [
+            (self._users, [("displayName", ASCENDING)], {"name": "idx_users_displayName"}),
+            (self._users, [("email", ASCENDING)], {"unique": True, "name": "idx_users_email"}),
+            (self._users, [("department", ASCENDING)], {"name": "idx_users_department"}),
+            (self._users, [("location", ASCENDING)], {"name": "idx_users_location"}),
+            (self._users, [("role", ASCENDING)], {"name": "idx_users_role"}),
+            (self._users, [("employmentType", ASCENDING)], {"name": "idx_users_employmentType"}),
+            (self._users, [("tags", ASCENDING)], {"name": "idx_users_tags"}),
+            (self._users, [("directoryGroups", ASCENDING)], {"name": "idx_users_directoryGroups"}),
+            (self._users, [("manager", ASCENDING)], {"name": "idx_users_manager"}),
+            (self._groups, [("name", ASCENDING)], {"unique": True, "name": "idx_groups_name"}),
+            (self._groups, [("businessUnit", ASCENDING)], {"name": "idx_groups_businessUnit"}),
+            (self._memberships, [("userId", ASCENDING), ("groupId", ASCENDING)], {"unique": True, "name": "idx_memberships_user_group"}),
+            (self._memberships, [("groupId", ASCENDING)], {"name": "idx_memberships_group"}),
+            (self._diffs, [("createdAt", DESCENDING)], {"name": "idx_diffs_createdAt"}),
+            (self._audit, [("ts", DESCENDING)], {"name": "idx_audit_ts"}),
+        ]
 
-        self._groups.create_index([("name", ASCENDING)], unique=True)
-        self._groups.create_index([("businessUnit", ASCENDING)])
-
-        self._memberships.create_index([("userId", ASCENDING), ("groupId", ASCENDING)], unique=True)
-        self._memberships.create_index([("groupId", ASCENDING)])
-
-        self._diffs.create_index([("createdAt", DESCENDING)])
-        self._audit.create_index([("ts", DESCENDING)])
+        for collection, keys, options in index_specs:
+            try:
+                collection.create_index(keys, **options)
+            except OperationFailure as exc:
+                if exc.code == 85:  # IndexOptionsConflict
+                    continue
+                raise
 
     def seed_if_empty(self) -> None:
         if self._users.estimated_document_count() > 0:

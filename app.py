@@ -6,12 +6,20 @@ import subprocess
 from datetime import timedelta
 from typing import Optional
 
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover - optional dependency
+    load_dotenv = None
+
 from adapters.base import DirectoryAdapter
 from adapters.standard_adapter import StandardAdapter
 from adapters.demo_adapter import DemoAdapter
 
 #python app.py 
 #start chrome --app=http://127.0.0.1:5000
+
+if load_dotenv:
+    load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # Required for sessions
@@ -49,12 +57,15 @@ def _get_demo_adapter() -> Optional[DirectoryAdapter]:
 
     mongo_uri = os.getenv("DEMO_MONGO_URI")
     if not mongo_uri:
+        if MODE_DEFAULT == MODE_DEMO:
+            print("DEFAULT_MODE is set to 'demo' but DEMO_MONGO_URI is missing in the environment.")
         return None
 
     db_name = os.getenv("DEMO_MONGO_DB", "dl_demo")
     try:
         adapter = DemoAdapter(mongo_uri=mongo_uri, db_name=db_name)
     except NotImplementedError:
+        print("DemoAdapter is not implemented; ensure demo adapter support is available.")
         return None
     except Exception as exc:  # pragma: no cover - defensive
         print(f"Failed to initialise DemoAdapter: {exc}")
@@ -75,6 +86,7 @@ def get_directory_adapter() -> DirectoryAdapter:
         demo_adapter = _get_demo_adapter()
         if demo_adapter is not None:
             return demo_adapter
+        print("Demo adapter unavailable; defaulting to standard adapter.")
     return standard_adapter
 
 @app.before_request
@@ -306,12 +318,23 @@ def tree_preview(dl_name, manager):
 
 @app.route('/api/employees')
 def get_employee_names():
-    conn = pyodbc.connect(conn_str)
-    cursor = conn.cursor()
-    cursor.execute("SELECT EmployeeName, EmployeeID FROM dbo.Employee_List ORDER BY EmployeeName ASC")
-    rows = cursor.fetchall()
-    conn.close()
-    return jsonify([{"name": row.EmployeeName, "id": row.EmployeeID} for row in rows])
+    adapter = get_directory_adapter()
+    mode = _resolve_mode()
+    try:
+        if mode == MODE_DEMO and isinstance(adapter, DemoAdapter):
+            users = adapter.list_users()
+            return jsonify([{"name": user["name"], "id": user["email"]} for user in users])
+
+        conn = pyodbc.connect(conn_str)
+        cursor = conn.cursor()
+        cursor.execute("SELECT EmployeeName, EmployeeID FROM dbo.Employee_List ORDER BY EmployeeName ASC")
+        rows = cursor.fetchall()
+        conn.close()
+        return jsonify([{"name": row.EmployeeName, "id": row.EmployeeID} for row in rows])
+    except Exception as exc:
+        if mode == MODE_DEMO:
+            return jsonify({"error": str(exc)}), 500
+        raise
 
 @app.route('/api/addrule', methods=['POST'])
 def add_rule():
