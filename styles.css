@@ -30,7 +30,7 @@ body {
 
 .demo-main-grid {
   display: grid;
-  grid-template-columns: 540px minmax(0, 1fr);
+  grid-template-columns: 810px minmax(0, 1fr);
   gap: 32px;
   align-items: flex-start;
 }

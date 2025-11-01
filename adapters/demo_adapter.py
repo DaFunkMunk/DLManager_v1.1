@@ -670,7 +670,12 @@ class DemoAdapter(DirectoryAdapter):
         cursor = self._users.find({"_id": {"$in": list(unique_ids)}}, {"displayName": 1})
         return {doc["_id"]: doc.get("displayName") for doc in cursor}
 
-    def _summarize_memberships(self, entries: List[Dict[str, Any]], names_map: Dict[str, str]) -> Dict[str, Any]:
+    def _summarize_memberships(
+        self,
+        entries: List[Dict[str, Any]],
+        names_map: Dict[str, str],
+        tally: str = "generic",
+    ) -> Dict[str, Any]:
         if not entries:
             return {"count": 0, "names": [], "rules": []}
 
@@ -695,6 +700,7 @@ class DemoAdapter(DirectoryAdapter):
             "count": len(entries),
             "names": names[:5],
             "rules": rules[:3],
+            "tally": tally,
         }
     def apply(self, diff_id: str, actor: str) -> Dict[str, Any]:
         diff = self._diffs.find_one({"_id": diff_id})
@@ -754,10 +760,20 @@ class DemoAdapter(DirectoryAdapter):
 
         summary_before = self._summarize_memberships(before_payload, names_map)
         summary_after = self._summarize_memberships(after_payload, names_map)
+        summary_added = self._summarize_memberships(
+            [entry for entry in after_payload if entry.get("addedAt")],
+            names_map,
+            tally="added",
+        )
+        summary_removed = self._summarize_memberships(
+            [entry for entry in before_payload if entry not in after_payload],
+            names_map,
+            tally="removed",
+        )
 
         policy_notes = diff.get("policyNotes", [])
-        match_count = diff.get("matchCount", summary_after.get("count", 0))
-        match_names = diff.get("matchNames") or summary_after.get("names", [])
+        match_count = diff.get("matchCount", (summary_added.get("count", 0) or summary_after.get("count", 0)))
+        match_names = diff.get("matchNames") or summary_added.get("names", []) or summary_after.get("names", [])
         rule_label = diff.get("ruleLabel") or self.RULE_LABELS.get(rule_type, rule_type)
         rule_value_display = expression if rule_type == "expression" else value
 
@@ -780,6 +796,8 @@ class DemoAdapter(DirectoryAdapter):
             "summary": {
                 "before": summary_before,
                 "after": summary_after,
+                "added": summary_added,
+                "removed": summary_removed,
             },
             "matchCount": match_count,
             "matchNames": (match_names[:5] if match_names else []),
@@ -788,7 +806,29 @@ class DemoAdapter(DirectoryAdapter):
         }
         self._audit.insert_one(audit_doc)
 
-        return {"ok": True, "auditId": audit_doc["_id"], "applied": len(after_payload), "removed": len(before_payload) if action == "remove" else 0}
+        result_summary = {
+            "groupId": diff.get("groupId"),
+            "groupName": diff.get("groupName"),
+            "rule": {
+                "type": rule_type,
+                "label": rule_label,
+                "value": rule_value_display,
+                "expression": expression if rule_type == "expression" else None,
+            },
+            "added": summary_added,
+            "removed": summary_removed,
+            "before": summary_before,
+            "after": summary_after,
+            "policyNotes": policy_notes,
+        }
+
+        return {
+            "ok": True,
+            "auditId": audit_doc["_id"],
+            "applied": summary_added.get("count", 0),
+            "removed": summary_removed.get("count", 0),
+            "summary": result_summary,
+        }
 
     def audit(self, limit: int = 100) -> List[Dict[str, Any]]:
         cursor = self._audit.find().sort("ts", DESCENDING).limit(limit)

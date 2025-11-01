@@ -1,15 +1,8 @@
-admin @ 127.0.0.1 - - [10/Jun/2025 10:40:19] "POST /api/applyrules HTTP/1.1" 0 - SUCCESS
-  → Command: powershell -ExecutionPolicy Bypass -File \\cabotog.com\cogroot\corporate\prod\Procount\Distribution Lists\GroupUpload.ps1
-  → Exit Code: 0
-  → STDOUT:
-(empty)
-  → STDERR:
-(empty)
-admin @ 127.0.0.1 - - [10/Jun/2025 11:34:55] "POST /api/deleterule HTTP/1.1" 200 -  → Details: flag=Include, type=User, value=Nathaniel Pendley, dlName=Filter
-admin @ 127.0.0.1 - - [10/Jun/2025 11:35:05] "POST /api/applyrules HTTP/1.1" 0 - SUCCESS
-  → Command: powershell -ExecutionPolicy Bypass -File \\cabotog.com\cogroot\corporate\prod\Procount\Distribution Lists\GroupUpload.ps1
-  → Exit Code: 0
-  → STDOUT:
-(empty)
-  → STDERR:
-(empty)
+
+admin @ 127.0.0.1 - - [31/Oct/2025 03:18:28] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Casey Lee
+  Added: 1 (Casey Lee)
+  Removed: 0 (-)
+  Audit: a_148a766218a54f739cc1d56bd6fab593
+  Policy Notes: None

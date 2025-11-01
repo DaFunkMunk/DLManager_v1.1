@@ -204,6 +204,26 @@ def api_propose():
     if "error" in result:
         return jsonify(result), 400
 
+    return jsonify(result)
+
+
+@app.route('/api/apply', methods=['POST'])
+def api_apply():
+    adapter = get_directory_adapter()
+    payload = request.get_json(force=True, silent=True) or {}
+    diff_id = payload.get("diffId")
+    actor = session.get("user", "anonymous")
+    if not diff_id:
+        return jsonify({"error": "diffId is required."}), 400
+    try:
+        result = adapter.apply(diff_id, actor)
+    except NotImplementedError:
+        return jsonify({"error": "Not supported in current mode."}), 501
+    except Exception as exc:  # pragma: no cover - defensive
+        return jsonify({"error": str(exc)}), 500
+    if "error" in result:
+        return jsonify(result), 400
+
     summary = result.get("summary") or {}
     timestamp = datetime.datetime.now().strftime("%d/%b/%Y %H:%M:%S")
     group_name = summary.get("groupName") or summary.get("groupId") or "(unknown)"
@@ -233,25 +253,6 @@ def api_propose():
     )
     append_to_log(log_entry)
 
-    return jsonify(result)
-
-
-@app.route('/api/apply', methods=['POST'])
-def api_apply():
-    adapter = get_directory_adapter()
-    payload = request.get_json(force=True, silent=True) or {}
-    diff_id = payload.get("diffId")
-    actor = session.get("user", "anonymous")
-    if not diff_id:
-        return jsonify({"error": "diffId is required."}), 400
-    try:
-        result = adapter.apply(diff_id, actor)
-    except NotImplementedError:
-        return jsonify({"error": "Not supported in current mode."}), 501
-    except Exception as exc:  # pragma: no cover - defensive
-        return jsonify({"error": str(exc)}), 500
-    if "error" in result:
-        return jsonify(result), 400
     return jsonify(result)
 
 
