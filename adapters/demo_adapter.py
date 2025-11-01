@@ -728,7 +728,7 @@ class DemoAdapter(DirectoryAdapter):
                 value_label = value or "(expression)"
 
             rows.append({
-                "statusLabel": entry.get("flag") or "Current",
+                "statusLabel": "Included" if (entry.get("flag") or "Current").lower() == "include" else (entry.get("flag") or "Current"),
                 "ruleType": rule_type,
                 "ruleLabel": rule_label,
                 "value": value,
