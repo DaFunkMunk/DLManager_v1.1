@@ -44,6 +44,19 @@
     expression: "Dynamic Expression"
   };
 
+  const API_BASE = (() => {
+    if (typeof window === "undefined") {
+      return "";
+    }
+    if (window.DL_API_BASE) {
+      return window.DL_API_BASE;
+    }
+    if (window.location.protocol === "file:") {
+      return "http://127.0.0.1:5000";
+    }
+    return "";
+  })();
+
   const STATIC_RULE_VALUES = {
     tree: ["Permian Operations", "Corporate IT", "HSE Response", "Analytics Guild"],
     location: ["Permian Field Office", "Midland Regional HQ", "Houston HQ", "Remote"],
@@ -73,7 +86,10 @@
     }
     headers.set("X-Mode", "demo");
     config.headers = headers;
-    return fetch(url, config);
+    config.credentials = "include";
+    const isAbsolute = /^https?:\/\//i.test(url);
+    const target = isAbsolute || !API_BASE ? url : `${API_BASE}${url}`;
+    return fetch(target, config);
   };
 
   function setSelectOptions(selectEl, values) {
