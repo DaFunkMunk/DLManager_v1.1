@@ -143,6 +143,26 @@ def api_me():
     return jsonify({"authenticated": True, "user": user})
 
 
+@app.route('/api/group-members')
+def api_group_members():
+    group_ref = (request.args.get('group') or '').strip()
+    if not group_ref:
+        return jsonify({'error': 'Group is required.'}), 400
+
+    adapter = get_directory_adapter()
+    memberships_fn = getattr(adapter, 'group_memberships', None)
+    if not callable(memberships_fn):
+        return jsonify({'error': 'Group membership lookup is not supported in this mode.'}), 501
+    try:
+        members = memberships_fn(group_ref)
+    except NotImplementedError:
+        return jsonify({'error': 'Group membership lookup is not supported in this mode.'}), 501
+    except Exception as exc:  # pragma: no cover - defensive
+        return jsonify({'error': str(exc)}), 500
+
+    return jsonify(members)
+
+
 @app.route('/api/logout', methods=['POST'])
 def api_logout():
     session.pop('user', None)

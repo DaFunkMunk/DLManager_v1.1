@@ -116,6 +116,9 @@ class StandardAdapter(DirectoryAdapter):
             "error": "Propose/apply workflow is only available in Demo mode.",
         }
 
+    def group_memberships(self, group_ref: str) -> List[Dict[str, Any]]:
+        raise NotImplementedError("Group membership lookup is not available for the standard adapter.")
+
     def audit(self, limit: int = 100) -> List[Dict[str, Any]]:
         # There is no unified audit store in Standard mode yet.
         return []

@@ -23,3 +23,4 @@ class DirectoryAdapter(Protocol):
 
     def validate_expression(self, expression: str) -> Dict[str, Any]:
         ...
+

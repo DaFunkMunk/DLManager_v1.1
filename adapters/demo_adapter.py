@@ -702,6 +702,44 @@ class DemoAdapter(DirectoryAdapter):
             "rules": rules[:3],
             "tally": tally,
         }
+    def group_memberships(self, group_ref: str) -> List[Dict[str, Any]]:
+        query = {"$or": [{"_id": group_ref}, {"name": group_ref}]}
+        group_doc = self._groups.find_one(query)
+        if not group_doc:
+            return []
+
+        memberships = list(self._memberships.find({"groupId": group_doc["_id"]}).sort("updatedAt", DESCENDING))
+        if not memberships:
+            return []
+
+        user_ids = [m.get("userId") for m in memberships if m.get("userId")]
+        names_map = self._user_name_map(user_ids)
+
+        rows: List[Dict[str, Any]] = []
+        for entry in memberships:
+            rule_type = (entry.get("ruleType") or "user").lower()
+            rule_label = self.RULE_LABELS.get(rule_type, rule_type)
+            value = entry.get("ruleValue")
+            value_label = value or "(none)"
+
+            if rule_type == "user":
+                value_label = names_map.get(entry.get("userId")) or value or entry.get("userId")
+            elif rule_type == "expression":
+                value_label = value or "(expression)"
+
+            rows.append({
+                "statusLabel": entry.get("flag") or "Current",
+                "ruleType": rule_type,
+                "ruleLabel": rule_label,
+                "value": value,
+                "valueLabel": value_label,
+                "userDisplayName": names_map.get(entry.get("userId")),
+                "userId": entry.get("userId"),
+                "updatedAt": entry.get("updatedAt"),
+            })
+
+        return rows
+
     def apply(self, diff_id: str, actor: str) -> Dict[str, Any]:
         diff = self._diffs.find_one({"_id": diff_id})
         if not diff:
@@ -864,3 +902,4 @@ class DemoAdapter(DirectoryAdapter):
             "addedAt": doc.get("addedAt"),
             "updatedAt": doc.get("updatedAt"),
         }
+

@@ -59,6 +59,11 @@
   let cachedEmployees = null;
   let cachedLocations = null;
   let currentDiffId = null;
+  let currentGroupMembers = [];
+  let pendingSummary = null;
+  let loadingGroupMembers = false;
+  let membershipError = null;
+  let hasGroupSelected = false;
 
   const apiFetch = (url, options = {}) => {
     const config = { ...options };
@@ -352,7 +357,114 @@
         currentUserEl.classList.remove("meta-user--visible");
       });
   }
+  function renderGroupStatus() {
+    if (!demoSummaryBody) return;
+    demoSummaryBody.innerHTML = "";
 
+    if (!hasGroupSelected) {
+      const row = document.createElement("tr");
+      row.innerHTML = '<td colspan="3" class="status-empty">Select a group to see membership details.</td>';
+      demoSummaryBody.appendChild(row);
+      return;
+    }
+
+    if (loadingGroupMembers) {
+      const row = document.createElement("tr");
+      row.innerHTML = '<td colspan="3" class="status-empty">Loading membership...</td>';
+      demoSummaryBody.appendChild(row);
+      return;
+    }
+
+    if (membershipError) {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td colspan="3" class="status-empty">${membershipError}</td>`;
+      demoSummaryBody.appendChild(row);
+      return;
+    }
+
+    let rowsRendered = 0;
+
+    if (Array.isArray(currentGroupMembers) && currentGroupMembers.length > 0) {
+      currentGroupMembers.forEach(member => {
+        const actionText = member.statusLabel || "Current";
+        const ruleLabel = member.ruleLabel || "-";
+        const valueLabel = member.valueLabel || "-";
+        const tr = document.createElement("tr");
+        tr.classList.add("group-status__row");
+        tr.innerHTML = `
+          <td class="group-status__cell"><span class="group-status__tag group-status__tag--current">${actionText}</span></td>
+          <td class="group-status__cell">${ruleLabel}</td>
+          <td class="group-status__cell">${valueLabel}</td>
+        `;
+        demoSummaryBody.appendChild(tr);
+        rowsRendered += 1;
+      });
+    }
+
+    if (!rowsRendered && !pendingSummary) {
+      const row = document.createElement("tr");
+      row.innerHTML = '<td colspan="3" class="status-empty">No current memberships for this group.</td>';
+      demoSummaryBody.appendChild(row);
+    }
+
+    if (pendingSummary) {
+      const pendingValue = pendingSummary.valueLabel || "(not selected)";
+      const tr = document.createElement("tr");
+      tr.classList.add("group-status__row", "group-status__pending");
+      tr.innerHTML = `
+        <td class="group-status__cell"><span class="group-status__tag group-status__tag--pending">${pendingSummary.action}</span></td>
+        <td class="group-status__cell">${pendingSummary.ruleLabel}</td>
+        <td class="group-status__cell">${pendingValue}</td>
+      `;
+      demoSummaryBody.appendChild(tr);
+    }
+  }
+
+  function loadGroupMemberships(groupValue) {
+    if (!groupValue) {
+      hasGroupSelected = false;
+      currentGroupMembers = [];
+      membershipError = null;
+      loadingGroupMembers = false;
+      renderGroupStatus();
+      return;
+    }
+
+    hasGroupSelected = true;
+    loadingGroupMembers = true;
+    membershipError = null;
+    renderGroupStatus();
+
+    apiFetch(`/api/group-members?group=${encodeURIComponent(groupValue)}`)
+      .then(res => {
+        if (res.status === 401) {
+          window.location.href = "/login";
+          return null;
+        }
+        if (!res.ok) {
+          return res.json().then(body => {
+            throw new Error(body && body.error ? body.error : "Failed to load membership.");
+          });
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (!data) {
+          return;
+        }
+        currentGroupMembers = Array.isArray(data) ? data : [];
+        membershipError = null;
+      })
+      .catch(err => {
+        currentGroupMembers = [];
+        const message = err && err.message ? err.message : "Failed to load membership.";
+        membershipError = `Failed to load membership: ${message}`;
+      })
+      .finally(() => {
+        loadingGroupMembers = false;
+        renderGroupStatus();
+      });
+  }
   function toggleLogs() {
     if (!logPanel) {
       return;
@@ -400,37 +512,42 @@
   }
 
   function updateSummary() {
-    if (!demoSummaryBody) return;
-    demoSummaryBody.innerHTML = "";
-
     const groupLabel = getSelectLabel(demoGroupSelect);
-    if (!groupLabel) {
-      const row = document.createElement("tr");
-      row.innerHTML = '<td colspan="3" class="status-empty">Select a group to see the pending change.</td>';
-      demoSummaryBody.appendChild(row);
+    hasGroupSelected = Boolean(groupLabel);
+
+    if (!hasGroupSelected) {
+      pendingSummary = null;
+      renderGroupStatus();
       return;
     }
 
-    const actionLabel = getSelectLabel(demoAction) || demoAction.value;
+    const actionLabel = getSelectLabel(demoAction) || demoAction.value || "(action)";
     const ruleKey = demoRuleSelect.value;
     const ruleLabel = RULE_LABELS[ruleKey] || getSelectLabel(demoRuleSelect) || ruleKey;
-
     const valueLabel = ruleKey === "expression"
       ? (expressionInput.value.trim() || "(not set)")
       : (getSelectLabel(demoValueSelect) || demoValueSelect.value || "(not selected)");
 
-    const row = document.createElement("tr");
-    row.innerHTML = `<td>${actionLabel}</td><td>${ruleLabel}</td><td>${valueLabel}</td>`;
-    demoSummaryBody.appendChild(row);
+    pendingSummary = {
+      action: actionLabel,
+      ruleLabel,
+      valueLabel,
+      ruleType: ruleKey
+    };
+
+    renderGroupStatus();
   }
+
 
   function clearPreview() {
     currentDiffId = null;
+    pendingSummary = null;
     demoApplyBtn.disabled = true;
     demoResult.classList.add("hidden");
     demoResultList.innerHTML = "";
     demoPolicyNotes.innerHTML = "";
     demoPolicyNotes.parentElement.classList.add("hidden");
+    renderGroupStatus();
   }
 
   function renderPreview(diff) {
@@ -620,6 +737,7 @@
         demoStatus.className = "demo-status demo-status--success";
         clearPreview();
         loadAudit();
+        loadGroupMemberships(demoGroupSelect.value);
       })
       .catch(err => {
         demoStatus.textContent = `Failed to apply change: ${err.message}`;
@@ -634,7 +752,10 @@
   updateSummary();
   loadCurrentUser();
 
-  demoGroupSelect.addEventListener("change", updateSummary);
+  demoGroupSelect.addEventListener("change", () => {
+    updateSummary();
+    loadGroupMemberships(demoGroupSelect.value);
+  });
   demoAction.addEventListener("change", updateSummary);
   demoRuleSelect.addEventListener("change", () => {
     populateValues(demoRuleSelect.value);
