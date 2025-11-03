@@ -93,6 +93,9 @@ class DemoAdapter(DirectoryAdapter):
         self._memberships: Collection = self._db["memberships"]
         self._diffs: Collection = self._db["diffs"]
         self._audit: Collection = self._db["audit"]
+        self._option_actions: Collection = self._db["dl_actions"]
+        self._option_groups: Collection = self._db["dl_groups"]
+        self._option_rules: Collection = self._db["dl_rules"]
 
         self._ensure_indexes()
         if seed:
@@ -115,6 +118,9 @@ class DemoAdapter(DirectoryAdapter):
             (self._memberships, [("groupId", ASCENDING)], {"name": "idx_memberships_group"}),
             (self._diffs, [("createdAt", DESCENDING)], {"name": "idx_diffs_createdAt"}),
             (self._audit, [("ts", DESCENDING)], {"name": "idx_audit_ts"}),
+            (self._option_actions, [("order", ASCENDING)], {"name": "idx_actions_order"}),
+            (self._option_groups, [("order", ASCENDING)], {"name": "idx_dl_groups_order"}),
+            (self._option_rules, [("order", ASCENDING)], {"name": "idx_rules_order"}),
         ]
 
         for collection, keys, options in index_specs:
@@ -126,8 +132,18 @@ class DemoAdapter(DirectoryAdapter):
                 raise
 
     def seed_if_empty(self, force: bool = False) -> None:
-        if not force and self._users.estimated_document_count() > 0:
-            return
+        if force:
+            for collection in (
+                self._users,
+                self._groups,
+                self._memberships,
+                self._diffs,
+                self._audit,
+                self._option_actions,
+                self._option_groups,
+                self._option_rules,
+            ):
+                collection.delete_many({})
 
         now = dt.datetime.utcnow()
         users = [
@@ -279,6 +295,7 @@ class DemoAdapter(DirectoryAdapter):
         ]
 
         one_week = now + dt.timedelta(days=7)
+
         memberships = [
             {
                 "_id": "m1",
@@ -312,25 +329,120 @@ class DemoAdapter(DirectoryAdapter):
             },
         ]
 
-        if force:
-            self._users.delete_many({})
-            self._groups.delete_many({})
-            self._memberships.delete_many({})
-            self._diffs.delete_many({})
-            self._audit.delete_many({})
+        needs_users = force or self._users.estimated_document_count() == 0
+        needs_groups = force or self._groups.estimated_document_count() == 0
+        needs_group_options = force or self._option_groups.estimated_document_count() == 0
 
-        if force or self._users.estimated_document_count() == 0:
+        if needs_users:
             self._users.insert_many(users)
         else:
             for doc in users:
                 self._users.update_one({"_id": doc["_id"]}, {"$set": doc}, upsert=True)
 
-        for group in groups:
-            self._groups.update_one({"_id": group["_id"]}, {"$set": group}, upsert=True)
+        if needs_groups:
+            self._groups.insert_many(groups)
+        else:
+            for group in groups:
+                self._groups.update_one({"_id": group["_id"]}, {"$set": group}, upsert=True)
 
         for membership in memberships:
             membership.setdefault("flag", "Include")
-            self._memberships.update_one({"_id": membership["_id"]}, {"$set": membership}, upsert=True)
+            membership_filter = {"userId": membership["userId"], "groupId": membership["groupId"]}
+            membership_payload = membership.copy()
+            membership_id = membership_payload.pop("_id", None)
+            update_doc: Dict[str, Any] = {"$set": membership_payload}
+            if membership_id:
+                update_doc.setdefault("$setOnInsert", {})["_id"] = membership_id
+            self._memberships.update_one(membership_filter, update_doc, upsert=True)
+
+        action_options = [
+            {"_id": "add", "value": "add", "label": "Add", "order": 1, "description": "Add matching members to the group."},
+            {"_id": "remove", "value": "remove", "label": "Remove", "order": 2, "description": "Remove matching members from the group."},
+            {"_id": "edit", "value": "edit", "label": "Edit", "order": 3, "description": "Adjust a dynamic membership rule."},
+        ]
+        for option in action_options:
+            self._option_actions.update_one({"_id": option["_id"]}, {"$set": option}, upsert=True)
+
+        group_options = [
+            {
+                "_id": group["_id"],
+                "value": group["_id"],
+                "label": group["name"],
+                "order": index,
+                "description": group.get("description"),
+            }
+            for index, group in enumerate(groups)
+        ]
+        if needs_group_options:
+            self._option_groups.insert_many(group_options)
+        else:
+            for option in group_options:
+                self._option_groups.update_one({"_id": option["_id"]}, {"$set": option}, upsert=True)
+
+        def as_options(values: Iterable[str]) -> List[Dict[str, str]]:
+            return [{"value": value, "label": value} for value in values]
+
+        saved_filter_values = as_options(self.SAVED_FILTERS.keys())
+
+        rule_options_seed = [
+            {"_id": "user", "label": "User", "order": 1, "valueSource": "employees"},
+            {"_id": "tree", "label": "Org Unit", "order": 2, "valueSource": "static", "staticValues": as_options(["Permian Operations", "Corporate IT", "HSE Response", "Analytics Guild"])},
+            {"_id": "location", "label": "Location", "order": 3, "valueSource": "static", "staticValues": as_options(["Permian Field Office", "Midland Regional HQ", "Houston HQ", "Remote"])},
+            {"_id": "role", "label": "Role / Job Title", "order": 4, "valueSource": "static", "staticValues": as_options(["Operations Manager", "Production Engineer", "Pipeline Coordinator", "Contract Technician", "HSE Specialist", "Drilling Supervisor", "IT Systems Analyst", "Data Scientist"])},
+            {"_id": "employment-type", "label": "Employment Type", "order": 5, "valueSource": "static", "staticValues": as_options(["Full-time", "Contractor", "Intern"])},
+            {"_id": "tag", "label": "Tag / Attribute", "order": 6, "valueSource": "static", "staticValues": as_options(["Responder", "Operations", "HSE", "AI", "Analytics", "Leadership"])},
+            {"_id": "directory-group", "label": "Directory Group", "order": 7, "valueSource": "static", "staticValues": as_options(["DL_Permian_Operators", "DL_Permian_Engineers", "DL_HSE_Responders", "DL_Corporate_IT", "DL_Data_Analytics"])},
+            {"_id": "tenure-window", "label": "Tenure Window", "order": 8, "valueSource": "static", "staticValues": as_options(["0-90", "91-180", "181-365", "365+"])},
+            {"_id": "manager", "label": "Manager / Team Lead", "order": 9, "valueSource": "static", "staticValues": as_options(["Casey Lee", "Alex Rivera", "Maria Gonzales", "Erika Howard"])},
+            {"_id": "saved-filter", "label": "Saved Filter", "order": 10, "valueSource": "static", "staticValues": saved_filter_values},
+            {"_id": "expression", "label": "Dynamic Expression", "order": 11, "valueSource": "expression"},
+        ]
+
+        for option in rule_options_seed:
+            option.setdefault("value", option["_id"])
+            option.setdefault("staticValues", [])
+            self._option_rules.update_one({"_id": option["_id"]}, {"$set": option}, upsert=True)
+
+    def list_demo_actions(self) -> List[Dict[str, Any]]:
+        cursor = self._option_actions.find().sort("order", ASCENDING)
+        actions: List[Dict[str, Any]] = []
+        for doc in cursor:
+            actions.append(
+                {
+                    "value": doc.get("value") or doc.get("_id"),
+                    "label": doc.get("label") or doc.get("_id"),
+                    "description": doc.get("description"),
+                }
+            )
+        return actions
+
+    def list_demo_groups(self) -> List[Dict[str, Any]]:
+        cursor = self._option_groups.find().sort("order", ASCENDING)
+        groups: List[Dict[str, Any]] = []
+        for doc in cursor:
+            groups.append(
+                {
+                    "value": doc.get("value") or doc.get("_id"),
+                    "label": doc.get("label") or doc.get("_id"),
+                    "description": doc.get("description"),
+                    "groupId": doc.get("value") or doc.get("_id"),
+                }
+            )
+        return groups
+
+    def list_demo_rules(self) -> List[Dict[str, Any]]:
+        cursor = self._option_rules.find().sort("order", ASCENDING)
+        rules: List[Dict[str, Any]] = []
+        for doc in cursor:
+            rules.append(
+                {
+                    "value": doc.get("value") or doc.get("_id"),
+                    "label": doc.get("label") or doc.get("_id"),
+                    "valueSource": doc.get("valueSource") or "static",
+                    "staticValues": doc.get("staticValues", []),
+                }
+            )
+        return rules
 
     def list_users(self, query: Optional[str] = None) -> List[Dict[str, Any]]:
         criteria: Dict[str, Any] = {}

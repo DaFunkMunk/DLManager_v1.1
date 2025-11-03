@@ -194,6 +194,11 @@ body {
   align-items: center;
 }
 
+.demo-actions .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .demo-actions .meta-logout {
   margin-left: 193px;
   font-size: 14px;

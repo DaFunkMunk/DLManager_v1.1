@@ -30,19 +30,8 @@
   const auditContent = document.getElementById("auditContent");
   let promptSpinnerInterval = null;
 
-  const RULE_LABELS = {
-    user: "User",
-    tree: "Org Unit",
-    location: "Location",
-    role: "Role / Job Title",
-    "employment-type": "Employment Type",
-    tag: "Tag / Attribute",
-    "directory-group": "Directory Group",
-    "tenure-window": "Tenure Window",
-    manager: "Manager / Team Lead",
-    "saved-filter": "Saved Filter",
-    expression: "Dynamic Expression"
-  };
+  let RULE_LABELS = {};
+  let RULE_METADATA = {};
 
   const API_BASE = (() => {
     if (typeof window === "undefined") {
@@ -57,20 +46,7 @@
     return "";
   })();
 
-  const STATIC_RULE_VALUES = {
-    tree: ["Permian Operations", "Corporate IT", "HSE Response", "Analytics Guild"],
-    location: ["Permian Field Office", "Midland Regional HQ", "Houston HQ", "Remote"],
-    role: ["Production Engineer", "Pipeline Coordinator", "Contract Technician", "Operations Manager", "HSE Specialist", "Drilling Supervisor", "IT Systems Analyst", "Data Scientist"],
-    "employment-type": ["Full-time", "Contractor", "Intern"],
-    tag: ["Responder", "Operations", "HSE", "AI", "Analytics", "Leadership"],
-    "directory-group": ["DL_Permian_Operators", "DL_Permian_Engineers", "DL_HSE_Responders", "DL_Corporate_IT", "DL_Data_Analytics"],
-    "tenure-window": ["0-90", "91-180", "181-365", "365+"],
-    manager: ["Casey Lee", "Alex Rivera", "Maria Gonzales", "Erika Howard"],
-    "saved-filter": ["HSE Responders", "Permian Engineers", "Contractors Ending Soon"]
-  };
-
   let cachedEmployees = null;
-  let cachedLocations = null;
   let currentDiffId = null;
   let previewDeck = [];
   let selectedPreviewId = null;
@@ -119,6 +95,148 @@
     option.selected = true;
     selectEl.value = option.value;
     option.disabled = wasDisabled;
+  }
+
+  function applyActionOptions(options) {
+    if (!demoAction) return;
+    demoAction.innerHTML = "";
+
+    if (!Array.isArray(options) || options.length === 0) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "No actions available";
+      opt.disabled = true;
+      opt.selected = true;
+      demoAction.appendChild(opt);
+      demoAction.disabled = true;
+      return;
+    }
+
+    demoAction.disabled = false;
+    options.forEach((option, index) => {
+      const value = option && (option.value || option.id || option._id);
+      const label = option && (option.label || value);
+      if (!value || !label) {
+        return;
+      }
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = label;
+      if (index === 0) {
+        opt.selected = true;
+      }
+      demoAction.appendChild(opt);
+    });
+  }
+
+  function applyGroupOptions(options) {
+    if (!demoGroupSelect) return;
+    demoGroupSelect.innerHTML = "";
+
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    placeholder.textContent = Array.isArray(options) && options.length > 0
+      ? "Select a group..."
+      : "No groups available";
+    demoGroupSelect.appendChild(placeholder);
+
+    if (!Array.isArray(options) || options.length === 0) {
+      demoGroupSelect.disabled = true;
+      return;
+    }
+
+    demoGroupSelect.disabled = false;
+    options.forEach(option => {
+      const value = option && (option.value || option.groupId || option.id || option._id);
+      const label = option && (option.label || value);
+      if (!value || !label) {
+        return;
+      }
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = label;
+      demoGroupSelect.appendChild(opt);
+    });
+  }
+
+  function applyRuleOptions(options) {
+    if (!demoRuleSelect) return;
+    demoRuleSelect.innerHTML = "";
+
+    RULE_LABELS = {};
+    RULE_METADATA = {};
+
+    if (!Array.isArray(options) || options.length === 0) {
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "No rules available";
+      opt.disabled = true;
+      opt.selected = true;
+      demoRuleSelect.appendChild(opt);
+      demoRuleSelect.disabled = true;
+      toggleExpressionDrawer(false);
+      setSelectOptions(demoValueSelect, []);
+      return;
+    }
+
+    demoRuleSelect.disabled = false;
+    options.forEach((rule, index) => {
+      const value = rule && (rule.value || rule.id || rule._id);
+      const label = rule && (rule.label || value);
+      if (!value || !label) {
+        return;
+      }
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = label;
+      if (index === 0) {
+        opt.selected = true;
+      }
+      demoRuleSelect.appendChild(opt);
+
+      const staticValues = Array.isArray(rule?.staticValues)
+        ? rule.staticValues.map(option => {
+            if (typeof option === "string") {
+              return { value: option, label: option };
+            }
+            return {
+              value: option.value ?? option.label ?? "",
+              label: option.label ?? option.value ?? "",
+            };
+          })
+        : [];
+
+      RULE_LABELS[value] = label;
+      RULE_METADATA[value] = {
+        valueSource: rule?.valueSource || "static",
+        staticValues,
+      };
+    });
+
+    populateValues(demoRuleSelect.value);
+  }
+
+  function initializeDemoOptions() {
+    const actionsPromise = apiFetch("/api/demo/actions").then(res => res.json());
+    const groupsPromise = apiFetch("/api/demo/groups").then(res => res.json());
+    const rulesPromise = apiFetch("/api/demo/rules").then(res => res.json());
+
+    return Promise.all([actionsPromise, groupsPromise, rulesPromise])
+      .then(([actions, groups, rules]) => {
+        applyActionOptions(Array.isArray(actions) ? actions : []);
+        applyGroupOptions(Array.isArray(groups) ? groups : []);
+        applyRuleOptions(Array.isArray(rules) ? rules : []);
+      })
+      .catch(err => {
+        console.error("Failed to load demo options", err);
+        if (demoStatus) {
+          demoStatus.textContent = `Failed to load demo options: ${err.message}`;
+          demoStatus.className = "demo-status demo-status--error";
+        }
+        throw err;
+      });
   }
 
   function toggleExpressionDrawer(visible) {
@@ -201,25 +319,18 @@
     }, 800);
   }
 
-  function populateGroups() {
-    apiFetch("/api/groups")
-      .then(res => res.json())
-      .then(groups => {
-        demoGroupSelect.innerHTML = '<option value="" disabled selected>Select a group...</option>';
-        if (Array.isArray(groups)) {
-          groups.forEach(group => {
-            const opt = document.createElement("option");
-            opt.value = group.name || group.id;
-            opt.textContent = group.name || group.id;
-            demoGroupSelect.appendChild(opt);
-          });
-        }
-      })
-      .catch(err => console.error("Failed to load groups", err));
-  }
-
   function populateValues(ruleKey) {
-    if (ruleKey === "expression") {
+    const metadata = RULE_METADATA[ruleKey];
+    if (!metadata) {
+      toggleExpressionDrawer(false);
+      setSelectOptions(demoValueSelect, []);
+      updateSummary();
+      return;
+    }
+
+    const source = (metadata.valueSource || "static").toLowerCase();
+
+    if (source === "expression") {
       toggleExpressionDrawer(true);
       updateSummary();
       return;
@@ -227,7 +338,7 @@
 
     toggleExpressionDrawer(false);
 
-    if (ruleKey === "user") {
+    if (source === "employees") {
       if (cachedEmployees) {
         setSelectOptions(
           demoValueSelect,
@@ -251,24 +362,18 @@
       return;
     }
 
-    if (ruleKey === "location") {
-      if (cachedLocations) {
-        setSelectOptions(demoValueSelect, cachedLocations);
-        updateSummary();
-        return;
-      }
-      apiFetch("/api/locations")
-        .then(res => res.json())
-        .then(values => {
-          cachedLocations = Array.isArray(values) ? values : [];
-          setSelectOptions(demoValueSelect, cachedLocations);
+    const staticValues = Array.isArray(metadata.staticValues)
+      ? metadata.staticValues.map(option => {
+          if (typeof option === "string") {
+            return { value: option, label: option };
+          }
+          return {
+            value: option.value ?? option.label ?? "",
+            label: option.label ?? option.value ?? "",
+          };
         })
-        .catch(err => console.error("Failed to load locations", err))
-        .finally(updateSummary);
-      return;
-    }
+      : [];
 
-    const staticValues = STATIC_RULE_VALUES[ruleKey] || [];
     setSelectOptions(demoValueSelect, staticValues);
     updateSummary();
   }
@@ -1049,10 +1154,16 @@
       });
   }
 
-  populateGroups();
-  populateValues(demoRuleSelect.value || "user");
+  initializeDemoOptions()
+    .then(() => {
+      updateSummary();
+      loadGroupMemberships(demoGroupSelect ? demoGroupSelect.value : "");
+    })
+    .catch(() => {
+      renderGroupStatus();
+    });
+
   loadAudit();
-  updateSummary();
   loadCurrentUser();
 
   demoGroupSelect.addEventListener("change", () => {

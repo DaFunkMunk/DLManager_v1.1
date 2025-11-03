@@ -172,6 +172,36 @@ def api_logout():
 # def serve_banner():
 #     return send_from_directory('.', 'Coterra-Logo.png')
 
+
+@app.route('/api/demo/actions')
+def api_demo_actions():
+    adapter = get_directory_adapter()
+    try:
+        actions = adapter.list_demo_actions()
+    except Exception as exc:  # pragma: no cover - defensive
+        return jsonify({"error": str(exc)}), 500
+    return jsonify(actions)
+
+
+@app.route('/api/demo/groups')
+def api_demo_groups():
+    adapter = get_directory_adapter()
+    try:
+        groups = adapter.list_demo_groups()
+    except Exception as exc:  # pragma: no cover - defensive
+        return jsonify({"error": str(exc)}), 500
+    return jsonify(groups)
+
+
+@app.route('/api/demo/rules')
+def api_demo_rules():
+    adapter = get_directory_adapter()
+    try:
+        rules = adapter.list_demo_rules()
+    except Exception as exc:  # pragma: no cover - defensive
+        return jsonify({"error": str(exc)}), 500
+    return jsonify(rules)
+
 @app.route('/')
 def serve_homepage():
     return send_from_directory('.', 'DLWebApp.html')

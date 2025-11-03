@@ -167,3 +167,31 @@ admin @ 127.0.0.1 - - [02/Nov/2025 21:25:24] "POST /api/apply HTTP/1.1" 200 - SU
   Removed: 0 (-)
   Audit: a_3184cb4b2f07435589582daca1b275df
   Policy Notes: None
+admin @ 127.0.0.1 - - [03/Nov/2025 00:27:58] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Alex Rivera
+  Added: 0 (-)
+  Removed: 1 (Alex Rivera)
+  Audit: a_32b5c4a4c6be4b348f1b40ffd6386024
+  Policy Notes: None
+admin @ 127.0.0.1 - - [03/Nov/2025 01:05:31] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employment Type -> Contractor
+  Added: 1 (Sam Contractor)
+  Removed: 0 (-)
+  Audit: a_6a4a5a07df244532b6d37b79aaf98ba3
+  Policy Notes: None
+admin @ 127.0.0.1 - - [03/Nov/2025 01:09:10] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employment Type -> Contractor
+  Added: 0 (-)
+  Removed: 1 (Sam Contractor)
+  Audit: a_cacda78d3fac411993033dbcaf3eac61
+  Policy Notes: None
+admin @ 127.0.0.1 - - [03/Nov/2025 01:14:02] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employment Type -> Contractor
+  Added: 1 (Sam Contractor)
+  Removed: 0 (-)
+  Audit: a_eac76a129ecd43be96c057d91e7a4777
+  Policy Notes: Edit will upsert matching memberships in demo mode.
