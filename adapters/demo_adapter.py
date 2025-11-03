@@ -656,6 +656,10 @@ class DemoAdapter(DirectoryAdapter):
 
         return {
             "id": diff_id,
+            "groupId": diff_payload["groupId"],
+            "groupName": diff_payload["groupName"],
+            "action": action,
+            "ruleType": rule_type,
             "matchCount": len(matches),
             "changes": changes,
             "policyNotes": policy_notes,

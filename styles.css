@@ -360,6 +360,122 @@ body {
   color: #007880;
 }
 
+.demo-preview__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.demo-preview__cards--scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.preview-card {
+  border: 1px solid #cfd7e3;
+  border-radius: 6px;
+  background: #fff;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.preview-card--selected {
+  border-color: #007880;
+  box-shadow: 0 0 0 2px rgba(0, 120, 128, 0.15);
+}
+
+.preview-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.preview-card__title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.preview-card__group {
+  font-weight: 600;
+  color: #00444a;
+}
+
+.preview-card__action {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #007880;
+  letter-spacing: 0.02em;
+}
+
+.preview-card__dismiss {
+  border: none;
+  background: transparent;
+  color: #526480;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.preview-card__dismiss:hover,
+.preview-card__dismiss:focus {
+  background: rgba(82, 100, 128, 0.08);
+  color: #002d32;
+}
+
+.preview-card__meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: #2f3c48;
+  margin-bottom: 8px;
+}
+
+.preview-card__meta strong {
+  font-weight: 600;
+}
+
+.preview-card__matches {
+  font-size: 0.85rem;
+  color: #526480;
+  margin-bottom: 6px;
+}
+
+.preview-card__changes {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.9rem;
+  color: #2f3c48;
+}
+
+.preview-card__changes li + li {
+  margin-top: 4px;
+}
+
+.preview-card__policy {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #e1e7f0;
+}
+
+.preview-card__policy-title {
+  font-weight: 600;
+  color: #00444a;
+  margin: 0 0 6px;
+}
+
+.preview-card__policy ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+  color: #2f3c48;
+}
+
 .demo-preview ul {
   margin: 0;
   padding-left: 20px;

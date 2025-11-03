@@ -12,8 +12,7 @@
   const demoStatus = document.getElementById("demoStatus");
   const demoSummaryBody = document.getElementById("demoSummaryBody");
   const demoResult = document.getElementById("demoProposeResult");
-  const demoResultList = document.getElementById("demoResultList");
-  const demoPolicyNotes = document.getElementById("demoPolicyNotes");
+  const demoPreviewCards = document.getElementById("demoPreviewCards");
   const runPromptBtn = document.getElementById("runPromptBtn");
   const dlcPromptInput = document.getElementById("dlcPromptInput");
   const promptStatus = document.getElementById("promptStatus");
@@ -72,6 +71,8 @@
   let cachedEmployees = null;
   let cachedLocations = null;
   let currentDiffId = null;
+  let previewDeck = [];
+  let selectedPreviewId = null;
   let currentGroupMembers = [];
   let pendingSummary = null;
   let loadingGroupMembers = false;
@@ -417,13 +418,32 @@
       });
     }
 
-    if (!rowsRendered && !pendingSummary) {
-      const row = document.createElement("tr");
-      row.innerHTML = '<td colspan="3" class="status-empty">No current memberships for this group.</td>';
-      demoSummaryBody.appendChild(row);
-    }
+    const selectedGroupValue = demoGroupSelect.value;
+    const selectedGroupLabel = getSelectLabel(demoGroupSelect);
 
-    if (pendingSummary) {
+    const matchingPreviews = previewDeck.filter(card => {
+      const cardValue = card.groupId || card.groupName;
+      const cardName = card.groupName;
+      return (
+        (selectedGroupValue && (cardValue === selectedGroupValue || cardName === selectedGroupValue)) ||
+        (selectedGroupLabel && cardName === selectedGroupLabel)
+      );
+    });
+
+    matchingPreviews.forEach(card => {
+      const pendingValue = card.summary.valueLabel || "(not selected)";
+      const tr = document.createElement("tr");
+      tr.classList.add("group-status__row", "group-status__pending");
+      tr.innerHTML = `
+        <td class="group-status__cell"><span class="group-status__tag group-status__tag--pending">${card.summary.action}</span></td>
+        <td class="group-status__cell">${card.summary.ruleLabel}</td>
+        <td class="group-status__cell">${pendingValue}</td>
+      `;
+      demoSummaryBody.appendChild(tr);
+      rowsRendered += 1;
+    });
+
+    if (pendingSummary && pendingSummary.groupValue === selectedGroupValue) {
       const pendingValue = pendingSummary.valueLabel || "(not selected)";
       const tr = document.createElement("tr");
       tr.classList.add("group-status__row", "group-status__pending");
@@ -433,6 +453,13 @@
         <td class="group-status__cell">${pendingValue}</td>
       `;
       demoSummaryBody.appendChild(tr);
+      rowsRendered += 1;
+    }
+
+    if (!rowsRendered) {
+      const row = document.createElement("tr");
+      row.innerHTML = '<td colspan="3" class="status-empty">No current memberships for this group.</td>';
+      demoSummaryBody.appendChild(row);
     }
   }
 
@@ -528,6 +555,7 @@
   }
 
   function updateSummary() {
+    const groupValue = demoGroupSelect.value;
     const groupLabel = getSelectLabel(demoGroupSelect);
     hasGroupSelected = Boolean(groupLabel);
 
@@ -537,8 +565,8 @@
       return;
     }
 
-    const actionLabel = getSelectLabel(demoAction) || demoAction.value || "(action)";
     const ruleKey = demoRuleSelect.value;
+    const actionLabel = getSelectLabel(demoAction) || formatActionLabel(demoAction.value);
     const ruleLabel = RULE_LABELS[ruleKey] || getSelectLabel(demoRuleSelect) || ruleKey;
     const valueLabel = ruleKey === "expression"
       ? (expressionInput.value.trim() || "(not set)")
@@ -548,65 +576,273 @@
       action: actionLabel,
       ruleLabel,
       valueLabel,
-      ruleType: ruleKey
+      ruleType: ruleKey,
+      groupLabel,
+      groupValue
     };
 
     renderGroupStatus();
   }
 
 
-  function clearPreview() {
-    currentDiffId = null;
-    pendingSummary = null;
-    demoApplyBtn.disabled = true;
-    demoResult.classList.add("hidden");
-    demoResultList.innerHTML = "";
-    demoPolicyNotes.innerHTML = "";
-    demoPolicyNotes.parentElement.classList.add("hidden");
-    renderGroupStatus();
+  function formatActionLabel(action) {
+    const normalized = (action || "").toString().toLowerCase();
+    if (!normalized) {
+      return "Action";
+    }
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }
 
-  function renderPreview(diff) {
-    if (!diff || !Array.isArray(diff.changes) || diff.changes.length === 0) {
-      clearPreview();
+  function ensureSelectedPreview() {
+    if (!previewDeck.length) {
+      selectedPreviewId = null;
+      currentDiffId = null;
+      return;
+    }
+    if (!selectedPreviewId || !previewDeck.some(card => card.id === selectedPreviewId)) {
+      const latest = previewDeck[previewDeck.length - 1];
+      selectedPreviewId = latest.id;
+    }
+    currentDiffId = selectedPreviewId;
+  }
+
+  function refreshPreviewDeck() {
+    if (!demoPreviewCards || !demoResult) {
       return;
     }
 
-    demoResultList.innerHTML = "";
+    ensureSelectedPreview();
 
-    diff.changes.slice(0, 10).forEach(change => {
-      const li = document.createElement("li");
-      const action = change.action || change.op || "?";
-      const ruleLabel = RULE_LABELS[change.ruleType] || change.ruleType;
-      const valueLabel = change.ruleType === "expression"
-        ? change.expression
-        : (change.ruleValueLabel || change.ruleValue || "");
-      const userLabel = change.userDisplayName || change.userEmail || "(group)";
-      const valuePart = valueLabel ? ` - ${valueLabel}` : "";
-      li.textContent = `${action} ${userLabel} (${ruleLabel}${valuePart})`;
-      demoResultList.appendChild(li);
+    demoPreviewCards.innerHTML = "";
+    previewDeck.forEach(card => {
+      demoPreviewCards.appendChild(buildPreviewCard(card));
     });
 
-    if (diff.matchCount && diff.changes.length > diff.matchCount) {
+    const hasCards = previewDeck.length > 0;
+    demoResult.classList.toggle("hidden", !hasCards);
+    demoApplyBtn.disabled = !selectedPreviewId;
+    demoPreviewCards.classList.toggle("demo-preview__cards--scroll", previewDeck.length >= 4);
+  }
+
+  function buildPreviewCard(card) {
+    const cardEl = document.createElement("article");
+    cardEl.className = "preview-card";
+    if (card.id === selectedPreviewId) {
+      cardEl.classList.add("preview-card--selected");
+    }
+    cardEl.dataset.diffId = card.id;
+
+    cardEl.addEventListener("click", () => {
+      selectPreview(card.id);
+    });
+
+    const header = document.createElement("div");
+    header.className = "preview-card__header";
+
+    const title = document.createElement("div");
+    title.className = "preview-card__title";
+    const groupEl = document.createElement("span");
+    groupEl.className = "preview-card__group";
+    groupEl.textContent = card.groupName || card.summary.groupLabel || "(group)";
+    const actionEl = document.createElement("span");
+    actionEl.className = "preview-card__action";
+    actionEl.textContent = card.summary.action || formatActionLabel(card.action);
+    title.appendChild(groupEl);
+    title.appendChild(actionEl);
+
+    const dismissBtn = document.createElement("button");
+    dismissBtn.type = "button";
+    dismissBtn.className = "preview-card__dismiss";
+    dismissBtn.setAttribute("aria-label", "Remove proposal");
+    dismissBtn.textContent = "X";
+    dismissBtn.addEventListener("click", evt => {
+      evt.stopPropagation();
+      removePreviewCard(card.id);
+    });
+
+    header.appendChild(title);
+    header.appendChild(dismissBtn);
+    cardEl.appendChild(header);
+
+    const meta = document.createElement("div");
+    meta.className = "preview-card__meta";
+    const ruleLabel = document.createElement("strong");
+    ruleLabel.textContent = card.summary.ruleLabel;
+    const valueLabel = document.createElement("span");
+    valueLabel.textContent = card.summary.valueLabel;
+    meta.appendChild(ruleLabel);
+    meta.appendChild(valueLabel);
+    cardEl.appendChild(meta);
+
+    const matchCount = typeof card.matchCount === "number"
+      ? card.matchCount
+      : (Array.isArray(card.changes) ? card.changes.length : 0);
+    const matchesLine = document.createElement("p");
+    matchesLine.className = "preview-card__matches";
+    matchesLine.textContent = matchCount
+      ? `${matchCount} match${matchCount === 1 ? "" : "es"}`
+      : "No matching members.";
+    cardEl.appendChild(matchesLine);
+
+    const changeList = document.createElement("ul");
+    changeList.className = "preview-card__changes";
+    const maxChanges = 10;
+    const changesToRender = Array.isArray(card.changes) ? card.changes.slice(0, maxChanges) : [];
+
+    changesToRender.forEach(change => {
       const li = document.createElement("li");
-      li.textContent = `... and ${diff.matchCount - diff.changes.length} more matches.`;
-      demoResultList.appendChild(li);
+      const action = change.action || change.op || "?";
+      const rule = change.ruleLabel || RULE_LABELS[change.ruleType] || change.ruleType;
+      const user = change.userDisplayName || change.userEmail || "(group)";
+      const valuePart = change.ruleValueLabel ? ` - ${change.ruleValueLabel}` : "";
+      li.textContent = `${action} ${user} (${rule}${valuePart})`;
+      changeList.appendChild(li);
+    });
+
+    if (matchCount > changesToRender.length) {
+      const more = document.createElement("li");
+      more.textContent = `... and ${matchCount - changesToRender.length} more matches.`;
+      changeList.appendChild(more);
     }
 
-    demoPolicyNotes.innerHTML = "";
-    if (Array.isArray(diff.policyNotes) && diff.policyNotes.length > 0) {
-      diff.policyNotes.forEach(note => {
+    cardEl.appendChild(changeList);
+
+    if (Array.isArray(card.policyNotes) && card.policyNotes.length) {
+      const policy = document.createElement("div");
+      policy.className = "preview-card__policy";
+      const titleEl = document.createElement("p");
+      titleEl.className = "preview-card__policy-title";
+      titleEl.textContent = "Policy Notes";
+      policy.appendChild(titleEl);
+
+      const policyList = document.createElement("ul");
+      card.policyNotes.forEach(note => {
         const item = document.createElement("li");
         item.textContent = note;
-        demoPolicyNotes.appendChild(item);
+        policyList.appendChild(item);
       });
-      demoPolicyNotes.parentElement.classList.remove("hidden");
-    } else {
-      demoPolicyNotes.parentElement.classList.add("hidden");
+      policy.appendChild(policyList);
+      cardEl.appendChild(policy);
     }
 
-    demoResult.classList.remove("hidden");
+    return cardEl;
+  }
+
+  function selectPreview(diffId) {
+    if (!diffId) {
+      return;
+    }
+    const card = previewDeck.find(entry => entry.id === diffId);
+    if (!card) {
+      return;
+    }
+    const alreadySelected = diffId === selectedPreviewId;
+    selectedPreviewId = diffId;
+    currentDiffId = diffId;
+
+    if (demoGroupSelect && card.groupName) {
+      const desiredValue = card.groupName;
+      const fallbackValue = card.groupId || desiredValue;
+      if (demoGroupSelect.value !== desiredValue) {
+        const option = Array.from(demoGroupSelect.options || []).find(opt =>
+          opt.value === desiredValue ||
+          opt.textContent === desiredValue ||
+          (fallbackValue && (opt.value === fallbackValue || opt.textContent === fallbackValue))
+        );
+        if (option) {
+          demoGroupSelect.value = option.value;
+          loadGroupMemberships(option.value);
+        } else {
+          loadGroupMemberships(fallbackValue);
+        }
+      } else if (!alreadySelected) {
+        loadGroupMemberships(demoGroupSelect.value);
+      }
+    }
+
     demoApplyBtn.disabled = false;
+    refreshPreviewDeck();
+    renderGroupStatus();
+  }
+
+  function removePreviewCard(diffId) {
+    if (!diffId) {
+      return null;
+    }
+    const index = previewDeck.findIndex(card => card.id === diffId);
+    if (index === -1) {
+      return null;
+    }
+    const [removed] = previewDeck.splice(index, 1);
+    if (selectedPreviewId === diffId) {
+      selectedPreviewId = null;
+    }
+    refreshPreviewDeck();
+    if (previewDeck.length && selectedPreviewId) {
+      selectPreview(selectedPreviewId);
+    } else {
+      renderGroupStatus();
+    }
+    return removed;
+  }
+
+  function clearPreview(targetDiffId) {
+    if (targetDiffId) {
+      removePreviewCard(targetDiffId);
+      return;
+    }
+    previewDeck = [];
+    selectedPreviewId = null;
+    currentDiffId = null;
+    refreshPreviewDeck();
+    renderGroupStatus();
+  }
+
+  function renderPreview(diff, summary) {
+    if (!diff || !diff.id) {
+      return;
+    }
+
+    const firstChange = Array.isArray(diff.changes) && diff.changes.length ? diff.changes[0] : null;
+    const summarySnapshot = {
+      action: summary && summary.action ? summary.action : formatActionLabel(diff.action),
+      ruleLabel: summary && summary.ruleLabel
+        ? summary.ruleLabel
+        : (diff.ruleLabel || RULE_LABELS[diff.ruleType] || diff.ruleType),
+      valueLabel: summary && summary.valueLabel
+        ? summary.valueLabel
+        : (diff.ruleType === "expression"
+          ? (diff.ruleValue || "(not set)")
+          : ((firstChange && firstChange.ruleValueLabel) || diff.ruleValue || "(not selected)")),
+      ruleType: (summary && summary.ruleType) || diff.ruleType,
+      groupLabel: summary && summary.groupLabel
+        ? summary.groupLabel
+        : (diff.groupName || (summary && summary.groupValue) || "(group)"),
+      groupValue: (summary && summary.groupValue) || diff.groupId || diff.groupName
+    };
+
+    const card = {
+      id: diff.id,
+      groupId: diff.groupId || summarySnapshot.groupValue,
+      groupName: diff.groupName || summarySnapshot.groupLabel,
+      action: diff.action,
+      ruleType: diff.ruleType,
+      summary: summarySnapshot,
+      matchCount: typeof diff.matchCount === "number"
+        ? diff.matchCount
+        : (Array.isArray(diff.changes) ? diff.changes.length : 0),
+      changes: Array.isArray(diff.changes) ? diff.changes.slice() : [],
+      policyNotes: Array.isArray(diff.policyNotes) ? diff.policyNotes.slice() : []
+    };
+
+    previewDeck = previewDeck.filter(entry => entry.id !== card.id);
+    previewDeck.push(card);
+
+    selectedPreviewId = card.id;
+    currentDiffId = card.id;
+    pendingSummary = null;
+    refreshPreviewDeck();
+    renderGroupStatus();
   }
 
   function handleValidateExpression() {
@@ -642,6 +878,7 @@
 
   function handlePropose() {
     const groupValue = demoGroupSelect.value;
+    const groupLabel = getSelectLabel(demoGroupSelect);
     if (!groupValue) {
       demoStatus.textContent = "Choose a group before proposing a change.";
       demoStatus.className = "demo-status demo-status--error";
@@ -674,6 +911,19 @@
       group: groupValue
     };
 
+    const summarySnapshot = pendingSummary
+      ? { ...pendingSummary }
+      : {
+          action: formatActionLabel(action),
+          ruleLabel: RULE_LABELS[ruleType] || getSelectLabel(demoRuleSelect) || ruleType,
+          valueLabel: ruleType === "expression"
+            ? (expression || "(not set)")
+            : (getSelectLabel(demoValueSelect) || value || "(not selected)"),
+          ruleType,
+          groupLabel: groupLabel || groupValue,
+          groupValue
+        };
+
     if (ruleType === "expression") {
       payload.expression = expression;
     } else {
@@ -702,18 +952,17 @@
         if (diff.error) {
           demoStatus.textContent = diff.error;
           demoStatus.className = "demo-status demo-status--error";
-          clearPreview();
+          demoApplyBtn.disabled = !selectedPreviewId;
           return;
         }
-        currentDiffId = diff.id;
-        renderPreview(diff);
+        renderPreview(diff, summarySnapshot);
         demoStatus.textContent = "Preview ready. Review the change, then confirm.";
         demoStatus.className = "demo-status demo-status--success";
       })
       .catch(err => {
         demoStatus.textContent = `Failed to request preview: ${err.message}`;
         demoStatus.className = "demo-status demo-status--error";
-        clearPreview();
+        demoApplyBtn.disabled = !selectedPreviewId;
       });
   }
 
@@ -727,10 +976,11 @@
     demoStatus.textContent = "Applying change.";
     demoStatus.className = "demo-status demo-status--info";
     demoApplyBtn.disabled = true;
+    const diffId = currentDiffId;
 
     apiFetch("/api/apply", {
       method: "POST",
-      body: JSON.stringify({ diffId: currentDiffId })
+      body: JSON.stringify({ diffId })
     })
       .then(res => {
         if (res.status === 401) {
@@ -746,19 +996,19 @@
         if (result.error) {
           demoStatus.textContent = result.error;
           demoStatus.className = "demo-status demo-status--error";
-          demoApplyBtn.disabled = false;
+          demoApplyBtn.disabled = !selectedPreviewId;
           return;
         }
         demoStatus.textContent = "Change applied.";
         demoStatus.className = "demo-status demo-status--success";
-        clearPreview();
+        removePreviewCard(diffId);
         loadAudit();
         loadGroupMemberships(demoGroupSelect.value);
       })
       .catch(err => {
         demoStatus.textContent = `Failed to apply change: ${err.message}`;
         demoStatus.className = "demo-status demo-status--error";
-        demoApplyBtn.disabled = false;
+        demoApplyBtn.disabled = !selectedPreviewId;
       });
   }
 

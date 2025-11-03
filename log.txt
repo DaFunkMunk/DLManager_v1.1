@@ -6,3 +6,108 @@ admin @ 127.0.0.1 - - [31/Oct/2025 03:18:28] "POST /api/apply HTTP/1.1" 200 - SU
   Removed: 0 (-)
   Audit: a_148a766218a54f739cc1d56bd6fab593
   Policy Notes: None
+admin @ 127.0.0.1 - - [01/Nov/2025 17:12:25] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Alex Rivera
+  Added: 0 (-)
+  Removed: 1 (Alex Rivera)
+  Audit: a_33305aa9eda94814aab004d466bc7c3f
+  Policy Notes: None
+admin @ 127.0.0.1 - - [01/Nov/2025 17:13:11] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Maria Gonzales
+  Added: 1 (Maria Gonzales)
+  Removed: 0 (-)
+  Audit: a_cb9b008f247a4bcb9335488830667428
+  Policy Notes: None
+admin @ 127.0.0.1 - - [01/Nov/2025 18:25:51] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: MSG_Production_East
+  Rule: User -> Devon Price
+  Added: 1 (Devon Price)
+  Removed: 0 (-)
+  Audit: a_017a182c0b9140e48feb740642891603
+  Policy Notes: None
+admin @ 127.0.0.1 - - [01/Nov/2025 18:26:44] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: DRILL_Permian
+  Rule: User -> Erika Howard
+  Added: 1 (Erika Howard)
+  Removed: 0 (-)
+  Audit: a_50e5e84df4d14c179ac66a12b3aa79ff
+  Policy Notes: None
+admin @ 127.0.0.1 - - [01/Nov/2025 18:26:46] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: HSE_Incident_Response
+  Rule: User -> Maria Gonzales
+  Added: 1 (Maria Gonzales)
+  Removed: 0 (-)
+  Audit: a_0fef97c442f645449474f3afaa51aaa1
+  Policy Notes: None
+admin @ 127.0.0.1 - - [01/Nov/2025 18:26:50] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Frank Patel
+  Added: 1 (Frank Patel)
+  Removed: 0 (-)
+  Audit: a_c8ec5d3e858f40268b3e4e6de4db366a
+  Policy Notes: None
+admin @ 127.0.0.1 - - [01/Nov/2025 18:27:58] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: HSE_Incident_Response
+  Rule: User -> Maria Gonzales
+  Added: 0 (-)
+  Removed: 1 (Maria Gonzales)
+  Audit: a_fcb2d70e83c849ae8ca0bb480ea16186
+  Policy Notes: None
+admin @ 127.0.0.1 - - [01/Nov/2025 18:29:08] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: HSE_Incident_Response
+  Rule: User -> Maria Gonzales
+  Added: 1 (Maria Gonzales)
+  Removed: 0 (-)
+  Audit: a_50c031a276324189a369ac5ca2e0be43
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 20:58:07] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: HSE_Incident_Response
+  Rule: User -> Maria Gonzales
+  Added: 1 (Maria Gonzales)
+  Removed: 0 (-)
+  Audit: a_910531f8e1514c1f963c38537abef994
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 20:58:11] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: DRILL_Permian
+  Rule: User -> Frank Patel
+  Added: 1 (Frank Patel)
+  Removed: 0 (-)
+  Audit: a_e10cebaa3bf4434a963cd0f349912386
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 20:58:35] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: Corporate_IT
+  Rule: User -> Erika Howard
+  Added: 1 (Erika Howard)
+  Removed: 0 (-)
+  Audit: a_03b371be69c44c63b9f5544438d0e1ab
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 20:58:41] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Devon Price
+  Added: 1 (Devon Price)
+  Removed: 0 (-)
+  Audit: a_1464f26bfdae497f8d5b9a560eb5e950
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 20:58:43] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Casey Lee
+  Added: 1 (Casey Lee)
+  Removed: 0 (-)
+  Audit: a_83535dc330f24f35a9548fddf29ca2e6
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 20:58:46] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Alex Rivera
+  Added: 1 (Alex Rivera)
+  Removed: 0 (-)
+  Audit: a_5cc6de41d6a2486cb863b83ea0d04a8b
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 21:06:21] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: HSE_Incident_Response
+  Rule: User -> Maria Gonzales
+  Added: 1 (Maria Gonzales)
+  Removed: 0 (-)
+  Audit: a_7617212ac47640eba9a865334163d268
+  Policy Notes: None

@@ -71,15 +71,16 @@
     }
 
     .logo {
-  display: block;
-  margin: 0 auto 20px auto;
+      display: block;
+      margin: 0 auto 20px auto;
+    }
 
-}
   </style>
 </head>
 <body>
   <div class="container">
-    <img src="{{ url_for('serve_banner') }}" alt="Logo" class="logo" width="200" height="40">
+    {# Optional branded logo: uncomment the block below to show a header image on the login form. #}
+    {# <img src="{{ url_for('serve_banner') }}" alt="Logo" class="logo" width="200" height="40"> #}
     <h2>Distribution List Manager</h2>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form method="post">
