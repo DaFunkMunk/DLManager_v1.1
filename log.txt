@@ -111,3 +111,59 @@ admin @ 127.0.0.1 - - [02/Nov/2025 21:06:21] "POST /api/apply HTTP/1.1" 200 - SU
   Removed: 0 (-)
   Audit: a_7617212ac47640eba9a865334163d268
   Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 21:24:53] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: MSG_Production_East
+  Rule: User -> Sam Contractor
+  Added: 1 (Sam Contractor)
+  Removed: 0 (-)
+  Audit: a_d1bc2ad664714f9995d89f9b148d9c04
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 21:24:57] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: HSE_Incident_Response
+  Rule: User -> Maria Gonzales
+  Added: 1 (Maria Gonzales)
+  Removed: 0 (-)
+  Audit: a_e43b4d93d447464894e026ae18546ac3
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 21:24:59] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: DRILL_Permian
+  Rule: User -> Jane Doe
+  Added: 1 (Jane Doe)
+  Removed: 0 (-)
+  Audit: a_71fd10cdf93246bcb3c4208565c95737
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 21:25:01] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: Corporate_IT
+  Rule: User -> Frank Patel
+  Added: 1 (Frank Patel)
+  Removed: 0 (-)
+  Audit: a_d145720847584546bb32d59046ba05d6
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 21:25:04] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Erika Howard
+  Added: 1 (Erika Howard)
+  Removed: 0 (-)
+  Audit: a_f9ac97e73a764eda8250b45083c94553
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 21:25:12] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Devon Price
+  Added: 1 (Devon Price)
+  Removed: 0 (-)
+  Audit: a_cdfd3689c83944ffb47599bfc3edb0c4
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 21:25:18] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Casey Lee
+  Added: 1 (Casey Lee)
+  Removed: 0 (-)
+  Audit: a_c7dc2b798bb14a259686259c587b66fc
+  Policy Notes: None
+admin @ 127.0.0.1 - - [02/Nov/2025 21:25:24] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Alex Rivera
+  Added: 1 (Alex Rivera)
+  Removed: 0 (-)
+  Audit: a_3184cb4b2f07435589582daca1b275df
+  Policy Notes: None

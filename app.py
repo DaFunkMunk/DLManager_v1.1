@@ -168,9 +168,9 @@ def api_logout():
     session.pop('user', None)
     return jsonify({"ok": True})
 
-""" @app.route('/Coterra-Logo.png')
-def serve_banner():
-    return send_from_directory('.', 'Coterra-Logo.png') """
+# @app.route('/Coterra-Logo.png')
+# def serve_banner():
+#     return send_from_directory('.', 'Coterra-Logo.png')
 
 @app.route('/')
 def serve_homepage():

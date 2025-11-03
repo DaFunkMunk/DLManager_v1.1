@@ -194,6 +194,12 @@ body {
   align-items: center;
 }
 
+.demo-actions .meta-logout {
+  margin-left: 193px;
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
 .btn {
   border: 1px solid #bcbcbc;
   border-radius: 6px;

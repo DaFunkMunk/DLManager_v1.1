@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Callable, Iterable
 
 from pymongo import ASCENDING, DESCENDING, MongoClient
 from pymongo.collection import Collection
-from pymongo.errors import DuplicateKeyError, OperationFailure
+from pymongo.errors import OperationFailure
 
 from .base import DirectoryAdapter
 
@@ -125,8 +125,8 @@ class DemoAdapter(DirectoryAdapter):
                     continue
                 raise
 
-    def seed_if_empty(self) -> None:
-        if self._users.estimated_document_count() > 0:
+    def seed_if_empty(self, force: bool = False) -> None:
+        if not force and self._users.estimated_document_count() > 0:
             return
 
         now = dt.datetime.utcnow()
@@ -312,12 +312,25 @@ class DemoAdapter(DirectoryAdapter):
             },
         ]
 
-        self._users.insert_many(users)
-        self._groups.insert_many(groups)
-        try:
-            self._memberships.insert_many(memberships, ordered=False)
-        except DuplicateKeyError:
-            pass
+        if force:
+            self._users.delete_many({})
+            self._groups.delete_many({})
+            self._memberships.delete_many({})
+            self._diffs.delete_many({})
+            self._audit.delete_many({})
+
+        if force or self._users.estimated_document_count() == 0:
+            self._users.insert_many(users)
+        else:
+            for doc in users:
+                self._users.update_one({"_id": doc["_id"]}, {"$set": doc}, upsert=True)
+
+        for group in groups:
+            self._groups.update_one({"_id": group["_id"]}, {"$set": group}, upsert=True)
+
+        for membership in memberships:
+            membership.setdefault("flag", "Include")
+            self._memberships.update_one({"_id": membership["_id"]}, {"$set": membership}, upsert=True)
 
     def list_users(self, query: Optional[str] = None) -> List[Dict[str, Any]]:
         criteria: Dict[str, Any] = {}
@@ -731,8 +744,11 @@ class DemoAdapter(DirectoryAdapter):
             elif rule_type == "expression":
                 value_label = value or "(expression)"
 
+            flag_value = entry.get("flag") or "Include"
+            status_label = "Included" if isinstance(flag_value, str) and flag_value.lower() == "include" else flag_value
+
             rows.append({
-                "statusLabel": "Included" if (entry.get("flag") or "Current").lower() == "include" else (entry.get("flag") or "Current"),
+                "statusLabel": status_label,
                 "ruleType": rule_type,
                 "ruleLabel": rule_label,
                 "value": value,
@@ -788,11 +804,17 @@ class DemoAdapter(DirectoryAdapter):
                 "updatedAt": dt.datetime.utcnow().isoformat(),
             }
 
+            if existing and existing.get("addedAt"):
+                membership_doc["addedAt"] = existing.get("addedAt")
+
             if existing and existing.get("_id"):
                 membership_doc["_id"] = existing["_id"]
             else:
                 membership_doc["_id"] = f"m_{uuid.uuid4().hex}"
                 membership_doc["addedAt"] = dt.datetime.utcnow().isoformat()
+
+            flag_value = (existing.get("flag") if existing else None) or "Include"
+            membership_doc["flag"] = flag_value
 
             self._memberships.replace_one({"_id": membership_doc["_id"]}, membership_doc, upsert=True)
             after_payload.append(self._normalize_membership(membership_doc))
@@ -895,6 +917,9 @@ class DemoAdapter(DirectoryAdapter):
             for doc in cursor
         ]
 
+    def close(self) -> None:
+        self._client.close()
+
     @staticmethod
     def _normalize_membership(doc: Dict[str, Any]) -> Dict[str, Any]:
         return {
@@ -905,5 +930,6 @@ class DemoAdapter(DirectoryAdapter):
             "ruleValue": doc.get("ruleValue"),
             "addedAt": doc.get("addedAt"),
             "updatedAt": doc.get("updatedAt"),
+            "flag": doc.get("flag"),
         }
 

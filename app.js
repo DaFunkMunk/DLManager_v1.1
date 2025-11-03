@@ -21,6 +21,7 @@
   const logoutBtn = document.getElementById("logoutBtn");
   const toggleAuditBtn = document.getElementById("toggleAuditBtn");
   const toggleLogsBtn = document.getElementById("toggleLogsBtn");
+  const demoClearBtn = document.getElementById("demoClearBtn");
   const hideLogsBtn = document.getElementById("hideLogsBtn");
   const hideAuditBtn = document.getElementById("hideAuditBtn");
   const logPanel = document.getElementById("logPanel");
@@ -106,6 +107,18 @@
       }
       selectEl.appendChild(opt);
     });
+  }
+
+  function resetSelectToPlaceholder(selectEl) {
+    if (!selectEl || selectEl.options.length === 0) {
+      return;
+    }
+    const option = selectEl.options[0];
+    const wasDisabled = option.disabled;
+    option.disabled = false;
+    option.selected = true;
+    selectEl.value = option.value;
+    option.disabled = wasDisabled;
   }
 
   function toggleExpressionDrawer(visible) {
@@ -348,6 +361,30 @@
       });
   }
 
+  function handleClearSelections() {
+    if (demoGroupSelect) {
+      resetSelectToPlaceholder(demoGroupSelect);
+    }
+    if (demoRuleSelect && demoRuleSelect.value === "expression") {
+      if (expressionInput) {
+        expressionInput.value = "";
+      }
+    } else if (demoValueSelect) {
+      resetSelectToPlaceholder(demoValueSelect);
+    }
+    pendingSummary = null;
+    if (demoGroupSelect) {
+      demoGroupSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    if (demoStatus) {
+      demoStatus.textContent = "Selections cleared.";
+      demoStatus.className = "demo-status demo-status--info";
+    }
+    if (demoApplyBtn) {
+      demoApplyBtn.disabled = !selectedPreviewId;
+    }
+  }
+
   function loadCurrentUser() {
     if (!currentUserEl) {
       return;
@@ -403,7 +440,7 @@
 
     if (Array.isArray(currentGroupMembers) && currentGroupMembers.length > 0) {
       currentGroupMembers.forEach(member => {
-        const actionText = member.statusLabel || "Current";
+        const actionText = member.statusLabel || "Included";
         const ruleLabel = member.ruleLabel || "-";
         const valueLabel = member.valueLabel || "-";
         const tr = document.createElement("tr");
@@ -1055,6 +1092,9 @@
         toggleLogs();
       }
     });
+  }
+  if (demoClearBtn) {
+    demoClearBtn.addEventListener("click", handleClearSelections);
   }
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
