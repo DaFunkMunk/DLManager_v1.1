@@ -199,6 +199,11 @@ body {
   white-space: nowrap;
 }
 
+.demo-actions .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .demo-actions .meta-logout {
   margin-left: 193px;
   font-size: 14px;
@@ -281,6 +286,82 @@ body {
 .expression-actions {
   display: flex;
   justify-content: flex-end;
+}
+
+.employee-record-drawer {
+  border: 1px solid #d6dde7;
+  border-radius: 10px;
+  background: #f8fbff;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.employee-record-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.employee-record-drawer.hidden {
+  display: none;
+}
+
+.employee-record-hint {
+  margin: 0;
+  font-size: 13px;
+  color: #5e6a78;
+}
+
+.employee-record-clear {
+  padding: 6px 14px;
+}
+
+.employee-record-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.employee-record-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.employee-record-field select,
+.employee-record-field input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #cfd7e3;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #ffffff;
+}
+
+.employee-record-field input:focus,
+.employee-record-field select:focus {
+  outline: 2px solid rgba(0, 120, 128, 0.25);
+  border-color: #007880;
+}
+
+.employee-record-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #334155;
+}
+
+.employee-record-option + .employee-record-option {
+  margin-top: 4px;
+}
+
+.employee-record-drawer--remove .employee-record-field {
+  display: none;
 }
 
 .demo-summary table {
@@ -465,6 +546,27 @@ body {
 }
 
 .preview-card__changes li + li {
+  margin-top: 4px;
+}
+
+.preview-card__record-change {
+  margin-bottom: 8px;
+}
+
+.preview-card__record-heading {
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.preview-card__record-fields {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.9rem;
+  color: #2f3c48;
+}
+
+.preview-card__record-fields li + li {
   margin-top: 4px;
 }
 
@@ -693,6 +795,17 @@ body {
 
 .audit-entry__notes li {
   margin-bottom: 2px;
+}
+
+.audit-entry__record-fields {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.audit-entry__record-fields li + li {
+  margin-top: 2px;
 }
 
 .audit-panel-content .status-empty {

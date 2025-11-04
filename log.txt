@@ -195,3 +195,38 @@ admin @ 127.0.0.1 - - [03/Nov/2025 01:14:02] "POST /api/apply HTTP/1.1" 200 - SU
   Removed: 0 (-)
   Audit: a_eac76a129ecd43be96c057d91e7a4777
   Policy Notes: Edit will upsert matching memberships in demo mode.
+admin @ 127.0.0.1 - - [03/Nov/2025 16:54:38] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employee Record -> Alex Rivera
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_7fec3b180dc34170bd48ceeadb0270bd
+  Policy Notes: None
+admin @ 127.0.0.1 - - [03/Nov/2025 19:41:27] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: Corporate_IT
+  Rule: User -> Alex Rivera
+  Added: 1 (Alex Rivera)
+  Removed: 0 (-)
+  Audit: a_e1ceff643d3b41c08b31e27e2b216e00
+  Policy Notes: None
+admin @ 127.0.0.1 - - [03/Nov/2025 19:42:45] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: Corporate_IT
+  Rule: Manager / Team Lead -> Erika Howard
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_85f7a26ecabc45feb163f2724568bfc1
+  Policy Notes: No users matched this rule.
+admin @ 127.0.0.1 - - [03/Nov/2025 19:47:32] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: Corporate_IT
+  Rule: Employee Record -> Erika Howard
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_0c85bd6f3c0b4685bb1881e768d8d9f8
+  Policy Notes: None
+admin @ 127.0.0.1 - - [03/Nov/2025 22:31:10] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: Corporate_IT
+  Rule: Directory Group -> DL_Permian_Operators
+  Added: 4 (Alex Rivera, Devon Price, Erika Howard, Jane Doe)
+  Removed: 1 (Alex Rivera)
+  Audit: a_f185382ff2ff41efb96ddebfb6597545
+  Policy Notes: None

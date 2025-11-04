@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import uuid
+from copy import deepcopy
 from typing import Any, Dict, List, Optional, Callable, Iterable
 
 from pymongo import ASCENDING, DESCENDING, MongoClient
@@ -28,6 +29,7 @@ class DemoAdapter(DirectoryAdapter):
         "manager": "Manager / Team Lead",
         "saved-filter": "Saved Filter",
         "expression": "Dynamic Expression",
+        "employee-record": "Employee Record",
     }
 
     STATIC_VALUE_FIELDS: Dict[str, List[str]] = {
@@ -76,6 +78,61 @@ class DemoAdapter(DirectoryAdapter):
         "Contractors Ending Soon": lambda doc: doc.get("employmentType") == "Contractor" and doc.get("tenureDays", 0) <= 30,
     }
 
+    EMPLOYEE_RECORD_FIELDS: List[Dict[str, Any]] = [
+        {
+            "name": "employmentType",
+            "label": "Employment Type",
+            "type": "select",
+            "options": [{"value": value, "label": value} for value in STATIC_VALUE_FIELDS["employment-type"]],
+        },
+        {
+            "name": "role",
+            "label": "Role / Job Title",
+            "type": "select",
+            "options": [{"value": value, "label": value} for value in STATIC_VALUE_FIELDS["role"]],
+        },
+        {
+            "name": "department",
+            "label": "Department",
+            "type": "select",
+            "options": [{"value": value, "label": value} for value in [
+                "Permian Operations",
+                "Corporate IT",
+                "HSE",
+                "South Operations",
+                "East Projects",
+                "Analytics Guild",
+            ]],
+        },
+        {
+            "name": "location",
+            "label": "Location",
+            "type": "select",
+            "options": [{"value": value, "label": value} for value in STATIC_VALUE_FIELDS["location"]],
+        },
+        {
+            "name": "manager",
+            "label": "Manager / Team Lead",
+            "type": "select",
+            "options": [{"value": value, "label": value} for value in STATIC_VALUE_FIELDS["manager"]],
+        },
+        {
+            "name": "tenureDays",
+            "label": "Tenure (days)",
+            "type": "number",
+            "options": [],
+        },
+        {
+            "name": "active",
+            "label": "Active Status",
+            "type": "boolean",
+            "options": [
+                {"value": True, "label": "Active"},
+                {"value": False, "label": "Inactive"},
+            ],
+        },
+    ]
+
     def __init__(
         self,
         mongo_uri: str,
@@ -96,6 +153,9 @@ class DemoAdapter(DirectoryAdapter):
         self._option_actions: Collection = self._db["dl_actions"]
         self._option_groups: Collection = self._db["dl_groups"]
         self._option_rules: Collection = self._db["dl_rules"]
+        self._employee_record_field_map: Dict[str, Dict[str, Any]] = {
+            field["name"]: field for field in self.EMPLOYEE_RECORD_FIELDS
+        }
 
         self._ensure_indexes()
         if seed:
@@ -396,12 +456,253 @@ class DemoAdapter(DirectoryAdapter):
             {"_id": "manager", "label": "Manager / Team Lead", "order": 9, "valueSource": "static", "staticValues": as_options(["Casey Lee", "Alex Rivera", "Maria Gonzales", "Erika Howard"])},
             {"_id": "saved-filter", "label": "Saved Filter", "order": 10, "valueSource": "static", "staticValues": saved_filter_values},
             {"_id": "expression", "label": "Dynamic Expression", "order": 11, "valueSource": "expression"},
+            {"_id": "employee-record", "label": "Employee Record", "order": 12, "valueSource": "employee-record", "recordFields": deepcopy(self.EMPLOYEE_RECORD_FIELDS)},
         ]
 
         for option in rule_options_seed:
             option.setdefault("value", option["_id"])
             option.setdefault("staticValues", [])
+            option.setdefault("recordFields", [])
             self._option_rules.update_one({"_id": option["_id"]}, {"$set": option}, upsert=True)
+
+    def _propose_employee_record(
+        self,
+        action: str,
+        group_doc: Dict[str, Any],
+        employee_ref: str,
+        intent: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        employee_ref = employee_ref.strip()
+        if not employee_ref:
+            return {"error": "Select an employee record to modify."}
+
+        record_changes = intent.get("recordChanges") or {}
+        set_fields = record_changes.get("set") or {}
+        unset_fields = record_changes.get("unset") or []
+
+        normalized_set: Dict[str, Any] = {}
+        change_fields: List[Dict[str, Any]] = []
+
+        # Normalize set fields
+        for field_name, raw_value in set_fields.items():
+            if field_name in normalized_set:
+                continue
+            try:
+                normalized_value = self._normalize_employee_field_value(field_name, raw_value)
+            except ValueError as exc:
+                return {"error": str(exc)}
+            normalized_set[field_name] = normalized_value
+
+        # Remove duplicates where a field is both set and unset
+        normalized_unset = []
+        for field_name in unset_fields:
+            if field_name in normalized_set or field_name in normalized_unset:
+                continue
+            normalized_unset.append(field_name)
+
+        if action == "remove" and not normalized_unset:
+            return {"error": "Choose at least one field to clear."}
+        if action in {"add", "edit"} and not normalized_set:
+            return {"error": "Provide at least one field to update."}
+
+        user_doc = self._users.find_one(
+            {"$or": [{"_id": employee_ref}, {"email": employee_ref}, {"displayName": employee_ref}]}
+        )
+        if not user_doc:
+            return {"error": "Employee record not found."}
+
+        for field_name, new_value in normalized_set.items():
+            before_value = user_doc.get(field_name)
+            if before_value == new_value:
+                # Avoid presenting no-op changes
+                continue
+            change_fields.append(
+                {
+                    "field": field_name,
+                    "label": self._employee_field_label(field_name),
+                    "before": before_value,
+                    "after": new_value,
+                    "beforeDisplay": self._format_employee_field_value(field_name, before_value),
+                    "afterDisplay": self._format_employee_field_value(field_name, new_value),
+                }
+            )
+
+        for field_name in normalized_unset:
+            before_value = user_doc.get(field_name)
+            change_fields.append(
+                {
+                    "field": field_name,
+                    "label": self._employee_field_label(field_name),
+                    "before": before_value,
+                    "after": None,
+                    "beforeDisplay": self._format_employee_field_value(field_name, before_value),
+                    "afterDisplay": "(cleared)",
+                }
+            )
+
+        if not change_fields:
+            return {"error": "No changes detected for the selected employee."}
+
+        diff_id = f"d_{uuid.uuid4().hex}"
+        diff_payload = {
+            "_id": diff_id,
+            "action": action,
+            "ruleType": "employee-record",
+            "ruleLabel": self.RULE_LABELS.get("employee-record", "Employee Record"),
+            "groupId": group_doc.get("_id"),
+            "groupName": group_doc.get("name"),
+            "value": employee_ref,
+            "expression": None,
+            "matches": [user_doc.get("_id")],
+            "matchCount": len(change_fields),
+            "matchNames": [user_doc.get("displayName")],
+            "policyNotes": [],
+            "createdAt": dt.datetime.utcnow().isoformat(),
+            "targetUserId": user_doc.get("_id"),
+            "targetUserEmail": user_doc.get("email"),
+            "targetUserName": user_doc.get("displayName"),
+            "recordChanges": {
+                "set": normalized_set,
+                "unset": normalized_unset,
+            },
+            "recordChangeFields": change_fields,
+        }
+        self._diffs.insert_one(diff_payload)
+
+        change_entry = {
+            "changeType": "employee-record",
+            "action": action.upper(),
+            "userId": user_doc.get("_id"),
+            "userDisplayName": user_doc.get("displayName"),
+            "userEmail": user_doc.get("email"),
+            "ruleLabel": diff_payload["ruleLabel"],
+            "ruleType": "employee-record",
+            "ruleValueLabel": user_doc.get("displayName"),
+            "fields": change_fields,
+        }
+
+        return {
+            "id": diff_id,
+            "groupId": diff_payload["groupId"],
+            "groupName": diff_payload["groupName"],
+            "action": action,
+            "ruleType": "employee-record",
+            "ruleLabel": diff_payload["ruleLabel"],
+            "matchCount": len(change_fields),
+            "changes": [change_entry],
+            "policyNotes": [],
+            "ruleValue": user_doc.get("displayName"),
+            "recordChanges": diff_payload["recordChanges"],
+        }
+
+    def _apply_employee_record(self, diff: Dict[str, Any], actor: str) -> Dict[str, Any]:
+        target_ref = diff.get("targetUserId") or diff.get("targetUserEmail") or diff.get("value")
+        if not target_ref:
+            return {"error": "Employee reference missing from diff."}
+
+        user_doc = self._users.find_one(
+            {"$or": [{"_id": target_ref}, {"email": target_ref}, {"displayName": target_ref}]}
+        )
+        if not user_doc:
+            return {"error": "Employee record not found."}
+
+        record_changes = diff.get("recordChanges") or {}
+        raw_set = record_changes.get("set") or {}
+        raw_unset = record_changes.get("unset") or []
+
+        normalized_set: Dict[str, Any] = {}
+        for field_name, raw_value in raw_set.items():
+            try:
+                normalized_set[field_name] = self._normalize_employee_field_value(field_name, raw_value)
+            except ValueError as exc:
+                return {"error": str(exc)}
+
+        normalized_unset = [field for field in raw_unset if field not in normalized_set]
+
+        update_doc: Dict[str, Any] = {}
+        if normalized_set:
+            update_doc["$set"] = normalized_set
+        if normalized_unset:
+            update_doc.setdefault("$unset", {})
+            for field in normalized_unset:
+                update_doc["$unset"][field] = ""
+
+        before_snapshot = {field: user_doc.get(field) for field in set(normalized_set.keys()) | set(normalized_unset)}
+
+        if update_doc:
+            self._users.update_one({"_id": user_doc.get("_id")}, update_doc)
+
+        updated_user = self._users.find_one({"_id": user_doc.get("_id")}) or user_doc
+        after_snapshot = {field: updated_user.get(field) for field in before_snapshot.keys()}
+
+        change_fields: List[Dict[str, Any]] = []
+        for field_name in before_snapshot.keys():
+            change_fields.append(
+                {
+                    "field": field_name,
+                    "label": self._employee_field_label(field_name),
+                    "before": before_snapshot[field_name],
+                    "after": after_snapshot.get(field_name),
+                    "beforeDisplay": self._format_employee_field_value(field_name, before_snapshot[field_name]),
+                    "afterDisplay": self._format_employee_field_value(field_name, after_snapshot.get(field_name)),
+                }
+            )
+
+        audit_doc = {
+            "_id": f"a_{uuid.uuid4().hex}",
+            "ts": dt.datetime.utcnow().isoformat(),
+            "actor": actor,
+            "op": diff.get("action", "").upper(),
+            "diffId": diff.get("_id"),
+            "groupId": diff.get("groupId"),
+            "groupName": diff.get("groupName"),
+            "rule": {
+                "type": "employee-record",
+                "label": self.RULE_LABELS.get("employee-record", "Employee Record"),
+                "value": updated_user.get("displayName"),
+            },
+            "employeeRecord": {
+                "userId": updated_user.get("_id"),
+                "userDisplayName": updated_user.get("displayName"),
+                "userEmail": updated_user.get("email"),
+                "changes": change_fields,
+                "set": normalized_set,
+                "unset": normalized_unset,
+            },
+            "policyNotes": diff.get("policyNotes", []),
+            "status": "success",
+        }
+        self._audit.insert_one(audit_doc)
+
+        empty_summary = {"count": 0, "names": [], "rules": []}
+        result_summary = {
+            "groupId": diff.get("groupId"),
+            "groupName": diff.get("groupName"),
+            "rule": {
+                "type": "employee-record",
+                "label": self.RULE_LABELS.get("employee-record", "Employee Record"),
+                "value": updated_user.get("displayName"),
+            },
+            "recordChange": {
+                "userId": updated_user.get("_id"),
+                "userDisplayName": updated_user.get("displayName"),
+                "userEmail": updated_user.get("email"),
+                "fields": change_fields,
+            },
+            "added": empty_summary,
+            "removed": empty_summary,
+            "before": {},
+            "after": {},
+            "policyNotes": diff.get("policyNotes", []),
+        }
+
+        return {
+            "ok": True,
+            "auditId": audit_doc["_id"],
+            "applied": len(change_fields),
+            "removed": 0,
+            "summary": result_summary,
+        }
 
     def list_demo_actions(self) -> List[Dict[str, Any]]:
         cursor = self._option_actions.find().sort("order", ASCENDING)
@@ -440,6 +741,7 @@ class DemoAdapter(DirectoryAdapter):
                     "label": doc.get("label") or doc.get("_id"),
                     "valueSource": doc.get("valueSource") or "static",
                     "staticValues": doc.get("staticValues", []),
+                    "recordFields": doc.get("recordFields", []),
                 }
             )
         return rules
@@ -665,6 +967,45 @@ class DemoAdapter(DirectoryAdapter):
 
         raise ValueError(f"Unknown rule type '{rule_type}'.")
 
+    def _employee_field_meta(self, field_name: str) -> Dict[str, Any]:
+        return self._employee_record_field_map.get(field_name, {})
+
+    def _employee_field_label(self, field_name: str) -> str:
+        meta = self._employee_field_meta(field_name)
+        return meta.get("label") or field_name.replace("_", " ").title()
+
+    def _normalize_employee_field_value(self, field_name: str, value: Any) -> Any:
+        meta = self._employee_field_meta(field_name)
+        field_type = (meta.get("type") or "text").lower()
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return None
+        if field_type == "number":
+            try:
+                return int(value)
+            except (ValueError, TypeError):
+                raise ValueError(f"'{self._employee_field_label(field_name)}' must be a number.")
+        if field_type == "boolean":
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                return value.strip().lower() in {"true", "1", "yes", "on"}
+            if isinstance(value, (int, float)):
+                return bool(value)
+            return False
+        return value
+
+    def _format_employee_field_value(self, field_name: str, value: Any) -> str:
+        meta = self._employee_field_meta(field_name)
+        if value in (None, "", []):
+            return "(empty)"
+        options = meta.get("options") or []
+        for option in options:
+            if option.get("value") == value:
+                return option.get("label") or str(value)
+        if isinstance(value, bool):
+            return "Active" if value else "Inactive"
+        return str(value)
+
     @staticmethod
     def _preview_change(
         action: str,
@@ -725,6 +1066,9 @@ class DemoAdapter(DirectoryAdapter):
 
         value = (intent.get("value") or "").strip()
         expression = (intent.get("expression") or "").strip()
+
+        if rule_type == "employee-record":
+            return self._propose_employee_record(action, group_doc, value, intent)
 
         compiled_expression = None
         if rule_type == "expression":
@@ -883,6 +1227,9 @@ class DemoAdapter(DirectoryAdapter):
         expression = diff.get("expression")
         matches_ids: List[str] = diff.get("matches", [])
 
+        if rule_type == "employee-record":
+            return self._apply_employee_record(diff, actor)
+
         if rule_type == "expression" and expression:
             compiled = self._compile_expression(expression)
             matches_docs = self._match_users("expression", expression=expression, compiled_expression=compiled)
@@ -1025,6 +1372,7 @@ class DemoAdapter(DirectoryAdapter):
                 "policyNotes": doc.get("policyNotes", []),
                 "before": doc.get("before", []),
                 "after": doc.get("after", []),
+                "employeeRecord": doc.get("employeeRecord", {}),
             }
             for doc in cursor
         ]
