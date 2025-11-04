@@ -23,7 +23,7 @@ if load_dotenv:
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # Required for sessions
-app.permanent_session_lifetime = timedelta(minutes=10)  # Auto-expire after 10 minutes
+app.permanent_session_lifetime = timedelta(minutes=60)  # Auto-expire after 60 minutes
 
 # Hardcoded users (add more here)
 USERS = {

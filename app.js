@@ -800,6 +800,25 @@
         currentUserEl.classList.remove("meta-user--visible");
       });
   }
+  function formatMembershipValue(member) {
+    if (!member) {
+      return "-";
+    }
+    const ruleType = (member.ruleType || "").toString().toLowerCase();
+    const baseLabel = member.valueLabel || "-";
+    if (ruleType === "user") {
+      return baseLabel;
+    }
+    const associatedUser = member.userDisplayName || member.userId || "";
+    if (!associatedUser) {
+      return baseLabel;
+    }
+    if (!baseLabel || baseLabel === "-") {
+      return associatedUser;
+    }
+    return `${baseLabel} : ${associatedUser}`;
+  }
+
   function renderGroupStatus() {
     if (!demoSummaryBody) return;
     demoSummaryBody.innerHTML = "";
@@ -831,7 +850,7 @@
       currentGroupMembers.forEach(member => {
         const actionText = member.statusLabel || "Included";
         const ruleLabel = member.ruleLabel || "-";
-        const valueLabel = member.valueLabel || "-";
+        const valueLabel = formatMembershipValue(member);
         const tr = document.createElement("tr");
         tr.classList.add("group-status__row");
         tr.innerHTML = `
