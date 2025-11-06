@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import uuid
 from copy import deepcopy
+import os
 from typing import Any, Dict, List, Optional, Callable, Iterable
 
 from pymongo import ASCENDING, DESCENDING, MongoClient
@@ -158,7 +159,8 @@ class DemoAdapter(DirectoryAdapter):
         }
 
         self._ensure_indexes()
-        if seed:
+        auto_seed = os.getenv("DEMO_AUTO_SEED", "true").lower() in {"1", "true", "yes", "on"}
+        if seed and auto_seed:
             self.seed_if_empty()
 
     def _ensure_indexes(self) -> None:
