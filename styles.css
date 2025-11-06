@@ -391,7 +391,7 @@ body {
   text-align: center;
 }
 
-.demo-summary tbody tr:nth-child(even) {
+.demo-summary tbody tr:nth-child(even):not(.group-status__pending) {
   background: #f4fafb;
 }
 
