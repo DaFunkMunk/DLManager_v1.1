@@ -13,7 +13,10 @@ body {
 
 .copilot-wrapper {
   width: 100%;
-  padding: 40px 40px 80px;
+  padding: 40px;
+  min-height: 100vh;
+  display: flex;
+  flex: 1;
 }
 
 .demo-panel {
@@ -21,11 +24,13 @@ body {
   border: 1px solid #c9ced8;
   border-radius: 16px;
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
-  padding: 32px;
+  padding: 40px;
   display: flex;
   flex-direction: column;
   gap: 24px;
   width: 100%;
+  min-height: calc(100vh - 80px);
+  box-sizing: border-box;
 }
 
 .demo-main-grid {
@@ -33,12 +38,16 @@ body {
   grid-template-columns: 1000px minmax(0, 1fr);
   gap: 32px;
   align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  max-height: calc(100% - 32px);
 }
 
 .demo-main-grid__left {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-height: 0;
 }
 
 .demo-prompt {
@@ -476,7 +485,11 @@ body {
   border: 1px solid #d6dde7;
   border-radius: 8px;
   background: #f8fbff;
-  padding: 14px 16px;
+  padding: 14px 16px 32px 16px;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .demo-preview.hidden {
@@ -493,11 +506,12 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .demo-preview__cards--scroll {
-  max-height: 420px;
-  overflow-y: auto;
   padding-right: 8px;
 }
 
