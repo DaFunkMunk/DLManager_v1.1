@@ -1104,7 +1104,7 @@
     const hasCards = previewDeck.length > 0;
     demoResult.classList.toggle("hidden", !hasCards);
     demoApplyBtn.disabled = !selectedPreviewId;
-    demoPreviewCards.classList.toggle("demo-preview__cards--scroll", previewDeck.length >= 4);
+    demoPreviewCards.classList.toggle("demo-preview__cards--scroll", previewDeck.length >= 3);
   }
 
   function buildPreviewCard(card) {
