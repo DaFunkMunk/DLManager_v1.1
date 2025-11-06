@@ -1285,34 +1285,41 @@ class DemoAdapter(DirectoryAdapter):
                 "updatedAt": entry.get("updatedAt"),
             })
 
-        recent_event = self._rule_events.find_one(
+        events_cursor = self._rule_events.find(
             {"groupId": group_doc["_id"]},
-            sort=[("timestamp", DESCENDING)]
+            sort=[("timestamp", DESCENDING)],
+            limit=50,
         )
-        if recent_event:
-            event_rule_type = (recent_event.get("ruleType") or "").lower()
-            summary = recent_event.get("summary") or {}
-            targets = recent_event.get("targets") or {}
-            details = recent_event.get("details") or {}
+        for event in events_cursor:
+            event_rule_type = (event.get("ruleType") or "").lower()
+            summary = event.get("summary") or {}
+            targets = event.get("targets") or {}
+            details = event.get("details") or {}
+
             label = summary.get("label") or targets.get("entityName") or "Recent update"
             if event_rule_type == "employee-record" and not summary.get("label"):
                 field_count = len(details.get("employeeRecord", {}).get("fields", []))
                 user_name = targets.get("entityName") or targets.get("entityId") or "(employee)"
                 label = f"{user_name} ({field_count} field{'s' if field_count != 1 else ''})" if field_count else user_name
+
+            timestamp = event.get("timestamp")
+            if isinstance(timestamp, dt.datetime):
+                timestamp = timestamp.isoformat()
+
             rows.append({
                 "statusLabel": summary.get("statusLabel") or "Updated",
                 "ruleType": event_rule_type or "employee-record",
-                "ruleLabel": self.RULE_LABELS.get(event_rule_type, recent_event.get("ruleType", "Employee Record")),
+                "ruleLabel": self.RULE_LABELS.get(event_rule_type, event.get("ruleType", "Employee Record")),
                 "value": targets.get("entityId"),
                 "valueLabel": label,
                 "userDisplayName": targets.get("entityName"),
                 "userId": targets.get("entityId"),
-                "updatedAt": recent_event.get("timestamp").isoformat() if isinstance(recent_event.get("timestamp"), dt.datetime) else recent_event.get("timestamp"),
+                "updatedAt": timestamp,
                 "isRecentRecordEvent": True,
-                "badgeClass": "group-status__tag--updated",
-                "rowClasses": ["group-status__row--recent"],
+                "badgeClass": summary.get("badgeClass") or "group-status__tag--updated",
+                "rowClasses": summary.get("rowClasses") or ["group-status__row--recent"],
                 "suppressUserValue": True,
-                "eventId": recent_event.get("_id"),
+                "eventId": event.get("_id"),
             })
 
         return rows
