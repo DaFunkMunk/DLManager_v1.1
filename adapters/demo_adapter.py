@@ -151,6 +151,7 @@ class DemoAdapter(DirectoryAdapter):
         self._memberships: Collection = self._db["memberships"]
         self._diffs: Collection = self._db["diffs"]
         self._audit: Collection = self._db["audit"]
+        self._rule_events: Collection = self._db["group_rule_events"]
         self._option_actions: Collection = self._db["dl_actions"]
         self._option_groups: Collection = self._db["dl_groups"]
         self._option_rules: Collection = self._db["dl_rules"]
@@ -183,6 +184,8 @@ class DemoAdapter(DirectoryAdapter):
             (self._option_actions, [("order", ASCENDING)], {"name": "idx_actions_order"}),
             (self._option_groups, [("order", ASCENDING)], {"name": "idx_dl_groups_order"}),
             (self._option_rules, [("order", ASCENDING)], {"name": "idx_rules_order"}),
+            (self._rule_events, [("groupId", ASCENDING), ("timestamp", DESCENDING)], {"name": "idx_events_group_ts"}),
+            (self._rule_events, [("groupId", ASCENDING), ("ruleType", ASCENDING), ("timestamp", DESCENDING)], {"name": "idx_events_group_rule_ts"}),
         ]
 
         for collection, keys, options in index_specs:
@@ -204,6 +207,7 @@ class DemoAdapter(DirectoryAdapter):
                 self._option_actions,
                 self._option_groups,
                 self._option_rules,
+                self._rule_events,
             ):
                 collection.delete_many({})
 
@@ -609,6 +613,7 @@ class DemoAdapter(DirectoryAdapter):
             return {"error": "Employee record not found."}
 
         record_changes = diff.get("recordChanges") or {}
+        group_doc = self._groups.find_one({"_id": diff.get("groupId")}) or {"_id": diff.get("groupId"), "name": diff.get("groupName")}
         raw_set = record_changes.get("set") or {}
         raw_unset = record_changes.get("unset") or []
 
@@ -675,6 +680,37 @@ class DemoAdapter(DirectoryAdapter):
             "status": "success",
         }
         self._audit.insert_one(audit_doc)
+
+        field_count = len(change_fields)
+        summary_payload = {
+            "label": f"{updated_user.get('displayName')} ({field_count} field{'s' if field_count != 1 else ''})",
+            "fieldCount": field_count,
+            "statusLabel": "Updated",
+        }
+        targets_payload = {
+            "userIds": [updated_user.get("_id")],
+            "entityId": updated_user.get("_id"),
+            "entityName": updated_user.get("displayName"),
+            "matchedCount": 1,
+        }
+        details_payload = {
+            "employeeRecord": {
+                "set": normalized_set,
+                "unset": normalized_unset,
+                "fields": change_fields,
+            }
+        }
+        self._log_rule_event(
+            group_doc,
+            diff.get("action", "edit"),
+            "employee-record",
+            actor,
+            summary=summary_payload,
+            targets=targets_payload,
+            details=details_payload,
+            diff_id=diff.get("_id"),
+            audit_id=audit_doc["_id"],
+        )
 
         empty_summary = {"count": 0, "names": [], "rules": []}
         result_summary = {
@@ -1008,6 +1044,42 @@ class DemoAdapter(DirectoryAdapter):
             return "Active" if value else "Inactive"
         return str(value)
 
+    def _log_rule_event(
+        self,
+        group_doc: Dict[str, Any],
+        action: str,
+        rule_type: str,
+        actor: str,
+        *,
+        summary: Optional[Dict[str, Any]] = None,
+        targets: Optional[Dict[str, Any]] = None,
+        details: Optional[Dict[str, Any]] = None,
+        diff_id: Optional[str] = None,
+        audit_id: Optional[str] = None,
+    ) -> None:
+        event_doc = {
+            "_id": f"evt_{uuid.uuid4().hex}",
+            "groupId": group_doc.get("_id"),
+            "groupName": group_doc.get("name"),
+            "ruleType": rule_type,
+            "action": action,
+            "actor": {
+                "id": actor,
+                "displayName": actor,
+            },
+            "timestamp": dt.datetime.utcnow(),
+            "summary": summary or {},
+            "targets": targets or {},
+            "details": details or {},
+            "diffId": diff_id,
+            "auditId": audit_id,
+        }
+        try:
+            self._rule_events.insert_one(event_doc)
+        except Exception:
+            # Event logging is best-effort; never block main workflow.
+            pass
+
     @staticmethod
     def _preview_change(
         action: str,
@@ -1184,11 +1256,8 @@ class DemoAdapter(DirectoryAdapter):
             return []
 
         memberships = list(self._memberships.find({"groupId": group_doc["_id"]}).sort("updatedAt", DESCENDING))
-        if not memberships:
-            return []
-
         user_ids = [m.get("userId") for m in memberships if m.get("userId")]
-        names_map = self._user_name_map(user_ids)
+        names_map = self._user_name_map(user_ids) if user_ids else {}
 
         rows: List[Dict[str, Any]] = []
         for entry in memberships:
@@ -1214,6 +1283,36 @@ class DemoAdapter(DirectoryAdapter):
                 "userDisplayName": names_map.get(entry.get("userId")),
                 "userId": entry.get("userId"),
                 "updatedAt": entry.get("updatedAt"),
+            })
+
+        recent_event = self._rule_events.find_one(
+            {"groupId": group_doc["_id"]},
+            sort=[("timestamp", DESCENDING)]
+        )
+        if recent_event:
+            event_rule_type = (recent_event.get("ruleType") or "").lower()
+            summary = recent_event.get("summary") or {}
+            targets = recent_event.get("targets") or {}
+            details = recent_event.get("details") or {}
+            label = summary.get("label") or targets.get("entityName") or "Recent update"
+            if event_rule_type == "employee-record" and not summary.get("label"):
+                field_count = len(details.get("employeeRecord", {}).get("fields", []))
+                user_name = targets.get("entityName") or targets.get("entityId") or "(employee)"
+                label = f"{user_name} ({field_count} field{'s' if field_count != 1 else ''})" if field_count else user_name
+            rows.append({
+                "statusLabel": summary.get("statusLabel") or "Updated",
+                "ruleType": event_rule_type or "employee-record",
+                "ruleLabel": self.RULE_LABELS.get(event_rule_type, recent_event.get("ruleType", "Employee Record")),
+                "value": targets.get("entityId"),
+                "valueLabel": label,
+                "userDisplayName": targets.get("entityName"),
+                "userId": targets.get("entityId"),
+                "updatedAt": recent_event.get("timestamp").isoformat() if isinstance(recent_event.get("timestamp"), dt.datetime) else recent_event.get("timestamp"),
+                "isRecentRecordEvent": True,
+                "badgeClass": "group-status__tag--updated",
+                "rowClasses": ["group-status__row--recent"],
+                "suppressUserValue": True,
+                "eventId": recent_event.get("_id"),
             })
 
         return rows
