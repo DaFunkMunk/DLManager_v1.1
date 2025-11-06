@@ -1322,7 +1322,7 @@ class DemoAdapter(DirectoryAdapter):
                 "eventId": event.get("_id"),
             })
 
-        return rows
+        return rows[::-1]
 
     def apply(self, diff_id: str, actor: str) -> Dict[str, Any]:
         diff = self._diffs.find_one({"_id": diff_id})
