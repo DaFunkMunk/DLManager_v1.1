@@ -925,7 +925,6 @@
       rowsRendered += 1;
     });
 
-    if (
     if (!rowsRendered) {
       const row = document.createElement("tr");
       row.innerHTML = '<td colspan="3" class="status-empty">No current memberships for this group.</td>';
