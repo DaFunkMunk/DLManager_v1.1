@@ -913,19 +913,6 @@
       rowsRendered += 1;
     });
 
-    if (pendingSummary && pendingSummary.groupValue === selectedGroupValue) {
-      const pendingValue = pendingSummary.valueLabel || "(not selected)";
-      const tr = document.createElement("tr");
-      tr.classList.add("group-status__row", "group-status__pending");
-      tr.innerHTML = `
-        <td class="group-status__cell"><span class="group-status__tag group-status__tag--pending">${pendingSummary.action}</span></td>
-        <td class="group-status__cell">${pendingSummary.ruleLabel}</td>
-        <td class="group-status__cell">${pendingValue}</td>
-      `;
-      demoSummaryBody.appendChild(tr);
-      rowsRendered += 1;
-    }
-
     if (!rowsRendered) {
       const row = document.createElement("tr");
       row.innerHTML = '<td colspan="3" class="status-empty">No current memberships for this group.</td>';
