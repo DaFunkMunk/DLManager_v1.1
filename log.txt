@@ -314,3 +314,10 @@ admin @ 127.0.0.1 - - [05/Nov/2025 22:11:54] "POST /api/apply HTTP/1.1" 200 - SU
   Removed: 0 (-)
   Audit: a_3238f0bc50e54911b5de73bd21f6d98c
   Policy Notes: None
+admin @ 127.0.0.1 - - [05/Nov/2025 22:59:36] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employee Record -> Jane Doe
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_161f9e69e5104fcfaf4daa342fe0e395
+  Policy Notes: None

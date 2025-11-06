@@ -329,30 +329,35 @@ class DemoAdapter(DirectoryAdapter):
                 "name": "ACL_EVIN-North",
                 "businessUnit": "North",
                 "description": "EVIN access for North asset team",
+                "recentRecordEdit": None,
             },
             {
                 "_id": "g_msg_prod_east",
                 "name": "MSG_Production_East",
                 "businessUnit": "East",
                 "description": "Production messaging channel for East region",
+                "recentRecordEdit": None,
             },
             {
                 "_id": "g_drill_permian",
                 "name": "DRILL_Permian",
                 "businessUnit": "Permian",
                 "description": "Drilling supervisors in the Permian",
+                "recentRecordEdit": None,
             },
             {
                 "_id": "g_hse_incident",
                 "name": "HSE_Incident_Response",
                 "businessUnit": "HSE",
                 "description": "Rapid responders for HSE incidents",
+                "recentRecordEdit": None,
             },
             {
                 "_id": "g_corp_it",
                 "name": "Corporate_IT",
                 "businessUnit": "Corporate",
                 "description": "Corporate IT administrators",
+                "recentRecordEdit": None,
             },
         ]
 
@@ -675,6 +680,17 @@ class DemoAdapter(DirectoryAdapter):
             "status": "success",
         }
         self._audit.insert_one(audit_doc)
+
+        recent_summary = {
+            "userId": updated_user.get("_id"),
+            "userName": updated_user.get("displayName"),
+            "fieldCount": len(change_fields),
+            "updatedAt": dt.datetime.utcnow().isoformat(),
+        }
+        self._groups.update_one(
+            {"_id": diff.get("groupId")},
+            {"$set": {"recentRecordEdit": recent_summary}},
+        )
 
         empty_summary = {"count": 0, "names": [], "rules": []}
         result_summary = {
@@ -1184,13 +1200,11 @@ class DemoAdapter(DirectoryAdapter):
             return []
 
         memberships = list(self._memberships.find({"groupId": group_doc["_id"]}).sort("updatedAt", DESCENDING))
-        if not memberships:
-            return []
+        rows: List[Dict[str, Any]] = []
 
         user_ids = [m.get("userId") for m in memberships if m.get("userId")]
         names_map = self._user_name_map(user_ids)
 
-        rows: List[Dict[str, Any]] = []
         for entry in memberships:
             rule_type = (entry.get("ruleType") or "user").lower()
             rule_label = self.RULE_LABELS.get(rule_type, rule_type)
@@ -1214,6 +1228,28 @@ class DemoAdapter(DirectoryAdapter):
                 "userDisplayName": names_map.get(entry.get("userId")),
                 "userId": entry.get("userId"),
                 "updatedAt": entry.get("updatedAt"),
+            })
+
+        recent_edit = group_doc.get("recentRecordEdit")
+        if recent_edit and isinstance(recent_edit, dict):
+            user_name = recent_edit.get("userName") or names_map.get(recent_edit.get("userId"))
+            field_count = recent_edit.get("fieldCount") or 0
+            value_label = user_name or "(employee)"
+            if field_count:
+                value_label = f"{value_label} ({field_count} field{'s' if field_count != 1 else ''})"
+            rows.append({
+                "statusLabel": "Updated",
+                "ruleType": "employee-record",
+                "ruleLabel": self.RULE_LABELS.get("employee-record", "Employee Record"),
+                "value": recent_edit.get("userId"),
+                "valueLabel": value_label,
+                "userDisplayName": user_name,
+                "userId": recent_edit.get("userId"),
+                "updatedAt": recent_edit.get("updatedAt"),
+                "fieldCount": field_count,
+                "badgeClass": "group-status__tag--updated",
+                "rowClasses": ["group-status__row--recent"],
+                "isRecentRecordEdit": True,
             })
 
         return rows
