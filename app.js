@@ -73,6 +73,7 @@
   let membershipError = null;
   let hasGroupSelected = false;
   let employeeRecordMeta = {};
+  let recentRecordChange = null;
 
   const apiFetch = (url, options = {}) => {
     const config = { ...options };
@@ -913,6 +914,27 @@
       rowsRendered += 1;
     });
 
+    if (
+      recentRecordChange &&
+      recentRecordChange.groupId &&
+      recentRecordChange.groupId === selectedGroupValue
+    ) {
+      const label = RULE_LABELS["employee-record"] || "Employee Record";
+      const fieldCount = recentRecordChange.fieldCount || 0;
+      const valueLabel = fieldCount > 0
+        ? `${recentRecordChange.userName} (${fieldCount} field${fieldCount === 1 ? "" : "s"})`
+        : recentRecordChange.userName || "(employee)";
+      const tr = document.createElement("tr");
+      tr.classList.add("group-status__row", "group-status__row--recent");
+      tr.innerHTML = `
+        <td class="group-status__cell"><span class="group-status__tag group-status__tag--updated">Updated</span></td>
+        <td class="group-status__cell">${label}</td>
+        <td class="group-status__cell">${valueLabel}</td>
+      `;
+      demoSummaryBody.appendChild(tr);
+      rowsRendered += 1;
+    }
+
     if (!rowsRendered) {
       const row = document.createElement("tr");
       row.innerHTML = '<td colspan="3" class="status-empty">No current memberships for this group.</td>';
@@ -933,6 +955,9 @@
     hasGroupSelected = true;
     loadingGroupMembers = true;
     membershipError = null;
+    if (recentRecordChange && recentRecordChange.groupId !== groupValue) {
+      recentRecordChange = null;
+    }
     renderGroupStatus();
 
     apiFetch(`/api/group-members?group=${encodeURIComponent(groupValue)}`)
@@ -1356,6 +1381,14 @@
     previewDeck = previewDeck.filter(entry => entry.id !== card.id);
     previewDeck.push(card);
 
+    if (
+      recentRecordChange &&
+      recentRecordChange.groupId &&
+      recentRecordChange.groupId === summarySnapshot.groupValue
+    ) {
+      recentRecordChange = null;
+    }
+
     selectedPreviewId = card.id;
     currentDiffId = card.id;
     pendingSummary = null;
@@ -1554,6 +1587,19 @@
         }
         demoStatus.textContent = "Change applied.";
         demoStatus.className = "demo-status demo-status--success";
+        const summary = result.summary || {};
+        const summaryRule = summary.rule || {};
+        if ((summaryRule.type || "").toLowerCase() === "employee-record") {
+          const recordChange = summary.recordChange || {};
+          const fields = Array.isArray(recordChange.fields) ? recordChange.fields : [];
+          recentRecordChange = {
+            groupId: summary.groupId || summaryRule.groupId || demoGroupSelect.value || null,
+            userName: summaryRule.value || recordChange.userDisplayName || "(employee)",
+            fieldCount: fields.length || summary.matchCount || 0
+          };
+        } else {
+          recentRecordChange = null;
+        }
         removePreviewCard(diffId);
         loadAudit();
         loadGroupMemberships(demoGroupSelect.value);

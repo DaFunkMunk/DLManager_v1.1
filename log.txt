@@ -300,3 +300,17 @@ admin @ 127.0.0.1 - - [05/Nov/2025 14:13:37] "POST /api/apply HTTP/1.1" 200 - SU
   Removed: 1 (Alex Rivera)
   Audit: a_14ff16ff3f624b0c89a10ec25eae992f
   Policy Notes: None
+admin @ 127.0.0.1 - - [05/Nov/2025 22:01:41] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 0 (-)
+  Removed: 1 (Jane Doe)
+  Audit: a_92ad7154dce84513bf675405f393cd77
+  Policy Notes: None
+admin @ 127.0.0.1 - - [05/Nov/2025 22:11:54] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employee Record -> Jane Doe
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_3238f0bc50e54911b5de73bd21f6d98c
+  Policy Notes: None

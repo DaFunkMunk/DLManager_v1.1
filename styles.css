@@ -391,7 +391,7 @@ body {
   text-align: center;
 }
 
-.demo-summary tbody tr:nth-child(even):not(.group-status__pending) {
+.demo-summary tbody tr:nth-child(even):not(.group-status__pending):not(.group-status__row--recent) {
   background: #f4fafb;
 }
 
@@ -425,6 +425,15 @@ body {
 .group-status__tag--pending {
   background: #fee2e2;
   color: #b91c1c;
+}
+
+.group-status__row--recent {
+  background: #eff6ff;
+}
+
+.group-status__tag--updated {
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 
