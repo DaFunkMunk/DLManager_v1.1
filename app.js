@@ -36,6 +36,19 @@
 
   let RULE_LABELS = {};
   let RULE_METADATA = {};
+  const POLICY_NOTES_BY_RULE = {
+    user: "Upserts that specific person into the group. If their membership row already exists, it just refreshes the stored details; otherwise it creates the row so the user is now in the group.",
+    manager: "Rebuilds the manager-based row. All direct reports of the selected manager get a membership row (added if missing, refreshed if present); non-reporting employees are untouched.",
+    tree: "Makes sure the group has a row that covers everyone in the chosen org unit. Any employee assigned to that unit gains or keeps a membership entry tied to this rule.",
+    location: "Guarantees the group contains a row that enrolls everyone stationed at the selected location. Matching employees are added or refreshed under that location rule.",
+    role: "Ensures the group includes all employees with the chosen job title, creating or updating the membership row that tracks that title.",
+    "employment-type": "Adds or refreshes the rule row for the specified employment type (for example, all contractors), so everyone with that status appears in the group.",
+    "directory-group": "Upserts the link to another directory group. Anyone belonging to the referenced directory group gets a membership row here, but the source group itself is unchanged.",
+    "tenure-window": "Re-applies the hire-duration filter. Employees whose tenure falls within the window receive or refresh a membership row under that rule.",
+    tag: "Adds or updates the row for the selected tag, placing every tagged employee on the group roster.",
+    "saved-filter": "Runs the saved filter and ensures each matching employee now has an entry in the group tied to that filter rule.",
+    "employee-record": "Keeps the user’s membership but applies the drawer’s edits to their stored employee fields (set/unset values) within the group context."
+  };
 
   const API_BASE = (() => {
     if (typeof window === "undefined") {
@@ -118,7 +131,14 @@
     }
 
     demoAction.disabled = false;
-    options.forEach((option, index) => {
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Select an action...";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    demoAction.appendChild(placeholder);
+
+    options.forEach(option => {
       const value = option && (option.value || option.id || option._id);
       const label = option && (option.label || value);
       if (!value || !label) {
@@ -127,9 +147,6 @@
       const opt = document.createElement("option");
       opt.value = value;
       opt.textContent = label;
-      if (index === 0) {
-        opt.selected = true;
-      }
       demoAction.appendChild(opt);
     });
   }
@@ -382,6 +399,11 @@
 
       employeeRecordFields.appendChild(wrapper);
     });
+  }
+
+  function getPolicyNotesForRule(ruleType) {
+    const note = POLICY_NOTES_BY_RULE[(ruleType || "").toLowerCase()];
+    return note ? [note] : [];
   }
 
   function clearEmployeeRecordInputs() {
@@ -734,6 +756,9 @@
   function handleClearSelections() {
     if (demoGroupSelect) {
       resetSelectToPlaceholder(demoGroupSelect);
+    }
+    if (demoAction) {
+      resetSelectToPlaceholder(demoAction);
     }
     if (demoRuleSelect) {
       resetSelectToPlaceholder(demoRuleSelect);
@@ -1490,6 +1515,11 @@
           demoStatus.className = "demo-status demo-status--error";
           demoApplyBtn.disabled = !selectedPreviewId;
           return;
+        }
+        const normalizedRule = (diff.ruleType || ruleType || "").toLowerCase();
+        const customNotes = getPolicyNotesForRule(normalizedRule);
+        if (customNotes.length) {
+          diff.policyNotes = customNotes;
         }
         renderPreview(diff, summarySnapshot);
         demoStatus.textContent = "Preview ready. Review the change, then confirm.";
