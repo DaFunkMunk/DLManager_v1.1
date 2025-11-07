@@ -121,7 +121,6 @@ class DemoAdapter(DirectoryAdapter):
             "name": "tenureDays",
             "label": "Tenure (days)",
             "type": "number",
-            "options": [],
         },
         {
             "name": "active",

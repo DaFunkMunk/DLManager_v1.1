@@ -388,12 +388,30 @@
         input.dataset.fieldName = field.name;
         if (fieldType === "number") {
           input.type = "number";
-          input.placeholder = "Enter a number";
+          input.placeholder = "Enter tenure (days)";
+          input.step = "1";
+          input.min = "0";
+          input.inputMode = "numeric";
+          input.pattern = "\\d*";
+          const blockedKeys = new Set(["e", "E", "+", "-", "."]);
+          input.addEventListener("keydown", event => {
+            if (blockedKeys.has(event.key)) {
+              event.preventDefault();
+            }
+          });
         } else {
           input.type = "text";
           input.placeholder = "Enter a value";
         }
-        input.addEventListener("input", updateSummary);
+        input.addEventListener("input", event => {
+          if (fieldType === "number") {
+            const sanitized = event.target.value.replace(/[^\d]/g, "");
+            if (sanitized !== event.target.value) {
+              event.target.value = sanitized;
+            }
+          }
+          updateSummary();
+        });
         wrapper.appendChild(input);
       }
 
@@ -445,13 +463,13 @@
       if (!fieldName) {
         return;
       }
-     if (input.tagName === "SELECT") {
-       const selectedOption = input.options[input.selectedIndex];
-       if (!selectedOption || selectedOption.value === "") {
-         return;
-       }
-       const raw = selectedOption.dataset.rawValue;
-       try {
+      if (input.tagName === "SELECT") {
+        const selectedOption = input.options[input.selectedIndex];
+        if (!selectedOption || selectedOption.value === "") {
+          return;
+        }
+        const raw = selectedOption.dataset.rawValue;
+        try {
           set[fieldName] = raw ? JSON.parse(raw) : selectedOption.value;
         } catch (err) {
           set[fieldName] = selectedOption.value;
@@ -459,7 +477,14 @@
         return;
       }
       if (typeof input.value === "string" && input.value.trim()) {
-        set[fieldName] = input.value.trim();
+        if (input.type === "number") {
+          const parsed = parseInt(input.value.trim(), 10);
+          if (!Number.isNaN(parsed)) {
+            set[fieldName] = parsed;
+          }
+        } else {
+          set[fieldName] = input.value.trim();
+        }
       }
     });
     return { set, unset: [] };
