@@ -328,3 +328,234 @@ admin @ 127.0.0.1 - - [06/Nov/2025 18:32:28] "POST /api/apply HTTP/1.1" 200 - SU
   Removed: 0 (-)
   Audit: a_7d0db6b4ee864e77a08ad824524d538c
   Policy Notes: None
+admin @ 127.0.0.1 - - [07/Nov/2025 18:07:27] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Casey Lee
+  Added: 1 (Casey Lee)
+  Removed: 0 (-)
+  Audit: a_98752f0c360b4559909f7b43bbd5661e
+  Policy Notes: None
+admin @ 127.0.0.1 - - [07/Nov/2025 18:07:41] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Sam Contractor
+  Added: 1 (Sam Contractor)
+  Removed: 1 (Sam Contractor)
+  Audit: a_83407fe16c2c4fd7865c14134e193bed
+  Policy Notes: None
+admin @ 127.0.0.1 - - [07/Nov/2025 18:07:51] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Maria Gonzales
+  Added: 1 (Maria Gonzales)
+  Removed: 0 (-)
+  Audit: a_9fd05c1dd8194a57a2152f9cb5d48314
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 12:36:05] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 1 (Jane Doe)
+  Removed: 1 (Jane Doe)
+  Audit: a_9c3c56f63fba40dea241e13596ac0663
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 12:37:11] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 0 (-)
+  Removed: 1 (Jane Doe)
+  Audit: a_0a6e6cc9b62740f2a8536a94c4ba2ce3
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 12:37:59] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employee Record -> Jane Doe
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_6a34db3fa4304db384c34ab50eeb8732
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 12:38:26] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Alex Rivera
+  Added: 0 (-)
+  Removed: 1 (Alex Rivera)
+  Audit: a_5dd857e383a346f5ae30343093a4f2c4
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 12:38:44] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Devon Price
+  Added: 0 (-)
+  Removed: 1 (Devon Price)
+  Audit: a_af9849e722934c9da183c5ac00378326
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 12:38:55] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Maria Gonzales
+  Added: 0 (-)
+  Removed: 1 (Maria Gonzales)
+  Audit: a_9c947b79d6ab4fe4a641ea278e5fbf57
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 12:39:03] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Casey Lee
+  Added: 0 (-)
+  Removed: 1 (Casey Lee)
+  Audit: a_803dfaf04b8447238a92d284164008e7
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 12:39:11] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Sam Contractor
+  Added: 0 (-)
+  Removed: 1 (Sam Contractor)
+  Audit: a_44273000d5bd4692bdd6e24c1938d4d4
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 12:40:01] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 1 (Jane Doe)
+  Removed: 0 (-)
+  Audit: a_008da309389f4f518ab6862dc78f8d1c
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 12:40:11] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 1 (Jane Doe)
+  Removed: 1 (Jane Doe)
+  Audit: a_957c647f19714509ac7551fa1bceeb71
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 12:47:44] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Alex Rivera
+  Added: 1 (Alex Rivera)
+  Removed: 0 (-)
+  Audit: a_36fc9729874441078a601db92dc69019
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 12:50:15] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: DRILL_Permian
+  Rule: User -> Casey Lee
+  Added: 1 (Casey Lee)
+  Removed: 0 (-)
+  Audit: a_70358da9ace24c80817a7b363a85a400
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:03:41] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: DRILL_Permian
+  Rule: User -> Alex Rivera
+  Added: 1 (Alex Rivera)
+  Removed: 1 (Alex Rivera)
+  Audit: a_d02c23429fe1417daae9b9ca6f082764
+  Policy Notes: Edit will upsert matching memberships in demo mode.
+admin @ 127.0.0.1 - - [09/Nov/2025 13:05:24] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: DRILL_Permian
+  Rule: Org Unit -> Permian Operations
+  Added: 2 (Alex Rivera, Devon Price)
+  Removed: 1 (Alex Rivera)
+  Audit: a_dcd8771e0460440ea99d5669de3e27b1
+  Policy Notes: Edit will upsert matching memberships in demo mode.
+admin @ 127.0.0.1 - - [09/Nov/2025 13:06:36] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Alex Rivera
+  Added: 0 (-)
+  Removed: 1 (Alex Rivera)
+  Audit: a_02ee7fe4afc74b78a28378439fc232ba
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:06:39] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 0 (-)
+  Removed: 1 (Jane Doe)
+  Audit: a_14251181e71241a3b950cd301f2a05a1
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:06:57] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 1 (Jane Doe)
+  Removed: 0 (-)
+  Audit: a_45f23ac3431b4e2c89e35a1beef9b105
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:07:01] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Alex Rivera
+  Added: 1 (Alex Rivera)
+  Removed: 0 (-)
+  Audit: a_c20ac35aa21c4d61a56d00100bb62f88
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:07:22] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Alex Rivera
+  Added: 0 (-)
+  Removed: 1 (Alex Rivera)
+  Audit: a_3fc0e29f72d74f369b18b280804e0805
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:07:28] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 0 (-)
+  Removed: 1 (Jane Doe)
+  Audit: a_3efefbd496104c16832ed39596e2ee87
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:08:33] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_18d947e079b54718b916f2b06ac6df1e
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:08:51] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 1 (Jane Doe)
+  Removed: 0 (-)
+  Audit: a_09b8a5725b184dd7864b9da948e6d73d
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:09:28] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 0 (-)
+  Removed: 1 (Jane Doe)
+  Audit: a_3263e6bb9feb419083a348113296937d
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:09:53] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_cf853b6639844800bdf6d8159ed01443
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:10:26] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 1 (Jane Doe)
+  Removed: 0 (-)
+  Audit: a_e840a64b2e554d6b874778b1cc3c2eea
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:10:29] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 0 (-)
+  Removed: 1 (Jane Doe)
+  Audit: a_c02dbd96b4124fa38b630ca33784ab7d
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:12:35] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_dd65e02fe3764b528c56be8950d235ef
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:12:53] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 1 (Jane Doe)
+  Removed: 0 (-)
+  Audit: a_d1725806857a4c9d8454df8075ab96ec
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:13:05] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Jane Doe
+  Added: 0 (-)
+  Removed: 1 (Jane Doe)
+  Audit: a_262ca7f904d94f83873a6e2547674c4e
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 13:16:11] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Location -> Permian Field Office
+  Added: 3 (Alex Rivera, Devon Price, Sam Contractor)
+  Removed: 0 (-)
+  Audit: a_90faa6f3d2684b75ab12cce4bd750dc0
+  Policy Notes: None

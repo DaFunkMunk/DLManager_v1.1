@@ -29,13 +29,15 @@ body {
   flex-direction: column;
   gap: 24px;
   width: 100%;
-  height: calc(100vh - 80px);
+  height: flex;
+  flex: 1 1 auto;
+  max-height: 1250px; 
   box-sizing: border-box;
 }
 
 .demo-main-grid {
   display: grid;
-  grid-template-columns: 1000px minmax(0, 1fr);
+  grid-template-columns: 600px minmax(0, 1fr) ; /* */
   gap: 32px;
   align-items: stretch;
   flex: 1 1 auto;
@@ -45,6 +47,7 @@ body {
 .demo-main-grid__left {
   display: flex;
   flex-direction: column;
+  width: 600px;
   gap: 28px;
 }
 
@@ -197,7 +200,7 @@ body {
 .demo-actions {
   margin-top: 12px;
   display: flex;
-  gap: 12px;
+  gap: 5px;
   align-items: center;
 }
 
@@ -212,7 +215,7 @@ body {
 }
 
 .demo-actions .meta-logout {
-  margin-left: 193px;
+  margin-left: 20px;
   font-size: 14px;
   padding: 8px 16px;
 }
@@ -237,7 +240,7 @@ body {
 }
 
 .demo-actions .audit-btn {
-  margin-left: auto;
+  margin-left: 0px;
 }
 
 .demo-actions .log-btn {
@@ -304,6 +307,17 @@ body {
   flex-direction: column;
   gap: 12px;
   margin-top: 12px;
+  max-height: 300px;
+  height: 300px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#employeeRecordFields {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .employee-record-header {
@@ -331,6 +345,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .employee-record-field label {

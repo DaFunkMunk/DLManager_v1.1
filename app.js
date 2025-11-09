@@ -1473,6 +1473,18 @@
       }
     }
 
+    if (ruleType === "employee-record") {
+      const hasPendingEmployeeRecord = previewDeck.some(
+        card => (card.ruleType || "").toLowerCase() === "employee-record"
+      );
+      if (hasPendingEmployeeRecord) {
+        demoStatus.textContent =
+          "Only one Employee Record proposal can be pending at a time. Confirm or clear the existing change before proposing another.";
+        demoStatus.className = "demo-status demo-status--error";
+        return;
+      }
+    }
+
     demoStatus.textContent = "Requesting preview.";
     demoStatus.className = "demo-status demo-status--info";
 
