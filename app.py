@@ -250,6 +250,10 @@ def serve_css():
 def serve_js():
     return send_from_directory('.', 'app.js')
 
+@app.route('/expression_quick_guide.html')
+def serve_expression_guide():
+    return send_from_directory('.', 'expression_quick_guide.html')
+
 
 @app.route('/api/users')
 def api_users():
