@@ -69,6 +69,9 @@
   let selectedPreviewId = null;
   let currentGroupMembers = [];
   let pendingSummary = null;
+  let pendingEmployeeRecordUser = null;
+  let pendingEmployeeRecordUpdates = [];
+  let pendingEmployeeRecordClears = [];
   let loadingGroupMembers = false;
   let membershipError = null;
   let hasGroupSelected = false;
@@ -629,6 +632,12 @@
       return { message: "Expression drafted. Review before proposing.", type: "success" };
     }
 
+    const recordUpdates = Array.isArray(slots.record_updates) ? slots.record_updates : [];
+    const recordClears = Array.isArray(slots.record_clears) ? slots.record_clears : [];
+    if (intent.startsWith("employee_record") || recordUpdates.length || recordClears.length) {
+      return populateEmployeeRecordSuggestion(slots, recordUpdates, recordClears);
+    }
+
     const ruleType = (slots.rule_type || "").toLowerCase();
     const value = slots.rule_value || slots.location || slots.user || slots.group;
     if (ruleType && RULE_METADATA[ruleType]) {
@@ -650,6 +659,95 @@
     }
 
     return { message: "Prompt parsed, but no matching rule fields identified.", type: "info" };
+  }
+
+  function populateEmployeeRecordSuggestion(slots, recordUpdates, recordClears) {
+    pendingEmployeeRecordUser = slots.user || pendingEmployeeRecordUser;
+    pendingEmployeeRecordUpdates = recordUpdates.slice();
+    pendingEmployeeRecordClears = recordClears.slice();
+
+    const desiredAction = recordClears.length && !recordUpdates.length ? "remove" : "edit";
+    if (demoAction) {
+      demoAction.value = desiredAction;
+    }
+    if (demoRuleSelect) {
+      demoRuleSelect.value = "employee-record";
+    }
+    populateValues("employee-record");
+    if (slots.user) {
+      selectEmployeeRecordUser(slots.user);
+    }
+    updateSummary();
+    return { message: "Employee record fields populated.", type: "success" };
+  }
+
+  function selectEmployeeRecordUser(name) {
+    if (!demoValueSelect || !name) {
+      return;
+    }
+    const lower = name.toLowerCase();
+    const match = Array.from(demoValueSelect.options).find(
+      option => option.value.toLowerCase() === lower || option.textContent.toLowerCase() === lower
+    );
+    if (match) {
+      demoValueSelect.value = match.value;
+      pendingEmployeeRecordUser = null;
+    } else {
+      pendingEmployeeRecordUser = name;
+      const opt = new Option(name, name, true, true);
+      demoValueSelect.add(opt);
+      demoValueSelect.value = name;
+    }
+  }
+
+  function applyEmployeeRecordUpdates(updates) {
+    if (!employeeRecordFields) {
+      return;
+    }
+    updates.forEach(update => {
+      if (!update || !update.field) {
+        return;
+      }
+      const fieldName = update.field;
+      const value = update.value;
+      let input = employeeRecordFields.querySelector(`[data-field-name="${fieldName}"]`);
+      if (!input && fieldName === "active") {
+        input = employeeRecordFields.querySelector(`[data-field-name="${fieldName}"][value="${value}"]`);
+      }
+      if (!input) {
+        return;
+      }
+      if (input.tagName === "SELECT") {
+        const serialized = typeof value === "string" ? value : value === undefined ? "" : JSON.stringify(value);
+        let match = Array.from(input.options).find(
+          option =>
+            option.dataset.rawValue === serialized ||
+            option.value === serialized ||
+            option.textContent?.toLowerCase() === String(value ?? "").toLowerCase()
+        );
+        if (!match) {
+          match = new Option(String(value ?? ""), serialized, true, true);
+          match.dataset.rawValue = serialized;
+          input.add(match);
+        }
+        input.value = match.value;
+      } else {
+        input.value = value ?? "";
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    });
+  }
+
+  function applyEmployeeRecordClears(fields) {
+    if (!employeeRecordFields) {
+      return;
+    }
+    fields.forEach(fieldName => {
+      const checkbox = employeeRecordFields.querySelector(`input[type="checkbox"][data-field-name="${fieldName}"]`);
+      if (checkbox) {
+        checkbox.checked = true;
+      }
+    });
   }
 
   function populateValues(ruleKey) {
@@ -692,8 +790,12 @@
           demoValueSelect,
           cachedEmployees.map(emp => ({ value: emp.name, label: emp.name }))
         );
+        if (pendingEmployeeRecordUser) {
+          selectEmployeeRecordUser(pendingEmployeeRecordUser);
+        }
         if (isEmployeeRecord) {
           renderEmployeeRecordEditor(demoAction.value);
+          reapplyPendingEmployeeRecordChanges();
         }
         updateSummary();
         return;
@@ -707,8 +809,12 @@
             demoValueSelect,
             cachedEmployees.map(emp => ({ value: emp.name, label: emp.name }))
           );
+          if (pendingEmployeeRecordUser) {
+            selectEmployeeRecordUser(pendingEmployeeRecordUser);
+          }
           if (isEmployeeRecord) {
             renderEmployeeRecordEditor(demoAction.value);
+            reapplyPendingEmployeeRecordChanges();
           }
         })
         .catch(err => console.error("Failed to load users", err))
@@ -849,6 +955,9 @@
     if (demoGroupSelect) {
       resetSelectToPlaceholder(demoGroupSelect);
     }
+    if (expressionInput) {
+      expressionInput.value = "";
+    }
     if (demoAction) {
       resetSelectToPlaceholder(demoAction);
     }
@@ -857,9 +966,6 @@
     }
     const normalizedRule = (demoRuleSelect?.value || "").toLowerCase();
     if (normalizedRule === "expression") {
-      if (expressionInput) {
-        expressionInput.value = "";
-      }
       toggleEmployeeRecordDrawer(false);
     } else {
       if (demoValueSelect) {
@@ -1777,3 +1883,16 @@
 
 
 
+  function reapplyPendingEmployeeRecordChanges() {
+    if (!employeeRecordFields) {
+      return;
+    }
+    if (pendingEmployeeRecordUpdates.length) {
+      applyEmployeeRecordUpdates(pendingEmployeeRecordUpdates);
+      pendingEmployeeRecordUpdates = [];
+    }
+    if (pendingEmployeeRecordClears.length) {
+      applyEmployeeRecordClears(pendingEmployeeRecordClears);
+      pendingEmployeeRecordClears = [];
+    }
+  }

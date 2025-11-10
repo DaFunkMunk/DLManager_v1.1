@@ -114,6 +114,13 @@ class IntentSlotParser:
             if inferred:
                 normalized_slots["expression"] = inferred
 
+        if intent in {"employee_record_set", "employee_record_clear"}:
+            updates, clears = self._infer_employee_record_changes(text, intent)
+            if updates:
+                normalized_slots["record_updates"] = updates
+            if clears:
+                normalized_slots["record_clears"] = clears
+
         return ParseResult(
             intent=intent,
             confidence=confidence,
@@ -214,4 +221,51 @@ class IntentSlotParser:
             parts.append(f'location == "{slots["location"]}"')
         if parts:
             return " and ".join(parts)
+        return None
+
+    def _infer_employee_record_changes(self, text: str, intent: str) -> Tuple[List[Dict[str, Any]], List[str]]:
+        updates: List[Dict[str, Any]] = []
+        clears: List[str] = []
+        lowered = text.lower()
+
+        if intent == "employee_record_set":
+            if "tenure" in lowered:
+                match = re.search(r"(\d+)\s*(?:day|days)", lowered)
+                if match:
+                    updates.append({"field": "tenureDays", "value": int(match.group(1))})
+
+            if any(word in lowered for word in ["deactivate", "set inactive", "make inactive", "turn off"]):
+                updates.append({"field": "active", "value": False})
+            elif any(word in lowered for word in ["activate", "reactivate", "make active", "set active"]):
+                updates.append({"field": "active", "value": True})
+
+            manager = self._match_canonical_value("manager", lowered)
+            if manager and "manager" in lowered:
+                updates.append({"field": "manager", "value": manager})
+
+            location = self._match_canonical_value("location", lowered)
+            if location and any(word in lowered for word in ["location", "office", "move to", "assign to"]):
+                updates.append({"field": "location", "value": location})
+
+        if intent == "employee_record_clear":
+            field_map = {
+                "tenure": "tenureDays",
+                "location": "location",
+                "manager": "manager",
+                "role": "role",
+                "employment": "employmentType",
+                "status": "active",
+            }
+            if any(word in lowered for word in ["clear", "remove", "wipe"]):
+                for keyword, field_name in field_map.items():
+                    if keyword in lowered:
+                        clears.append(field_name)
+
+        return updates, clears
+
+    def _match_canonical_value(self, category: str, lowered_text: str) -> Optional[str]:
+        lookup = self.inverse_synonyms.get(category, {})
+        for key, canonical in lookup.items():
+            if key in lowered_text:
+                return canonical
         return None
