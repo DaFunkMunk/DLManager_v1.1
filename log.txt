@@ -601,3 +601,10 @@ admin @ 127.0.0.1 - - [09/Nov/2025 23:24:50] "POST /api/apply HTTP/1.1" 200 - SU
   Removed: 0 (-)
   Audit: a_37879c81ff0e48578bb8108c6d92468e
   Policy Notes: Dynamic expressions evaluate against live demo attributes.
+admin @ 127.0.0.1 - - [10/Nov/2025 16:58:04] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employee Record -> Jane Doe
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_68fdd1f9ca9746fb94ddd0b8da8152f1
+  Policy Notes: None

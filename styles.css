@@ -293,6 +293,19 @@ body {
   line-height: 1.4;
 }
 
+.expression-quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: #0072ce;
+  text-decoration: none;
+}
+
+.expression-quick-link:hover {
+  text-decoration: underline;
+}
+
 .expression-actions {
   display: flex;
   justify-content: flex-end;

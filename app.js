@@ -750,6 +750,21 @@
     });
   }
 
+  function reapplyPendingEmployeeRecordChanges() {
+    if (!employeeRecordFields) {
+      return;
+    }
+    if (pendingEmployeeRecordUpdates.length) {
+      applyEmployeeRecordUpdates(pendingEmployeeRecordUpdates);
+      pendingEmployeeRecordUpdates = [];
+    }
+    if (pendingEmployeeRecordClears.length) {
+      applyEmployeeRecordClears(pendingEmployeeRecordClears);
+      pendingEmployeeRecordClears = [];
+    }
+  }
+
+
   function populateValues(ruleKey) {
     const normalizedKey = (ruleKey || "").toLowerCase();
     const metadata = RULE_METADATA[ruleKey];
@@ -1873,26 +1888,3 @@
   }
   expressionValidateBtn.addEventListener("click", handleValidateExpression);
 });
-
-
-
-
-
-
-
-
-
-
-  function reapplyPendingEmployeeRecordChanges() {
-    if (!employeeRecordFields) {
-      return;
-    }
-    if (pendingEmployeeRecordUpdates.length) {
-      applyEmployeeRecordUpdates(pendingEmployeeRecordUpdates);
-      pendingEmployeeRecordUpdates = [];
-    }
-    if (pendingEmployeeRecordClears.length) {
-      applyEmployeeRecordClears(pendingEmployeeRecordClears);
-      pendingEmployeeRecordClears = [];
-    }
-  }
