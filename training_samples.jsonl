@@ -1,0 +1,17 @@
+{"text": "Add contractors in the Permian office", "intent": "add_rule", "slots": {"rule_type": "employment-type", "rule_value": "contractor", "location": "permian field office"}}
+{"text": "Add all users to ACL_EVIN-North", "intent": "expression_rule", "slots": {"expression": "active == true", "rule_type": "expression"}}
+{"text": "Add everyone to ACL_EVIN-North", "intent": "expression_rule", "slots": {"expression": "active == true"}}
+{"text": "Include everyone reporting to Casey Lee", "intent": "add_rule", "slots": {"rule_type": "manager", "rule_value": "casey lee"}}
+{"text": "Add the entire DL_Permian_Operators list", "intent": "add_rule", "slots": {"rule_type": "directory-group", "rule_value": "dl_permian_operators"}}
+{"text": "Add Midland responders", "intent": "add_rule", "slots": {"rule_type": "expression", "expression": "contains(tags, \"Responder\") and location == \"midland regional hq\""}}
+{"text": "Remove Alex Rivera from ACL_EVIN-North", "intent": "remove_rule", "slots": {"rule_type": "user", "rule_value": "Alex Rivera", "group": "ACL_EVIN-North"}}
+{"text": "Drop the Houston HQ rule", "intent": "remove_rule", "slots": {"rule_type": "location", "rule_value": "houston hq"}}
+{"text": "Remove contractors entirely", "intent": "remove_rule", "slots": {"rule_type": "employment-type", "rule_value": "contractor"}}
+{"text": "Switch the Permian location rule to Midland HQ", "intent": "edit_rule", "slots": {"rule_type": "location", "from_value": "permian field office", "to_value": "midland regional hq"}}
+{"text": "Retarget the manager rule from Alex Rivera to Maria Gonzales", "intent": "edit_rule", "slots": {"rule_type": "manager", "from_value": "alex rivera", "to_value": "maria gonzales"}}
+{"text": "Update Jane Doe's tenure to 450 days", "intent": "employee_record_set", "slots": {"user": "Jane Doe", "field_updates": [{"field": "tenureDays", "value": 450}]}}
+{"text": "Set Sam Contractor to inactive", "intent": "employee_record_set", "slots": {"user": "Sam Contractor", "field_updates": [{"field": "active", "value": false}]}}
+{"text": "Clear the location for Devon Price", "intent": "employee_record_clear", "slots": {"user": "Devon Price", "fields_to_clear": ["location"]}}
+{"text": "Clear tenure days for Jane Doe", "intent": "employee_record_clear", "slots": {"user": "Jane Doe", "fields_to_clear": ["tenureDays"]}}
+{"text": "Expression for contractors in Permian with tenure over a year", "intent": "expression_rule", "slots": {"expression": "employmentType == \"Contractor\" and location == \"permian field office\" and tenureDays >= 365"}}
+{"text": "Expression for Houston interns under Casey", "intent": "expression_rule", "slots": {"expression": "employmentType == \"Intern\" and location == \"houston hq\" and manager == \"casey lee\""}}

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Expression Quick Guide</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #0f172a;
+    }
+    body {
+      margin: 0;
+      background: #f4f7fb;
+      padding: 32px;
+      line-height: 1.5;
+    }
+    .guide {
+      max-width: 860px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+      padding: 36px;
+    }
+    header {
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 20px;
+      margin-bottom: 32px;
+    }
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      color: #03697a;
+    }
+    header p {
+      margin: 0;
+      color: #475569;
+    }
+    h2 {
+      margin-top: 32px;
+      color: #0f7a8c;
+      font-size: 20px;
+    }
+    p {
+      margin-top: 8px;
+      color: #334155;
+    }
+    ul {
+      padding-left: 20px;
+      color: #334155;
+    }
+    .card {
+      background: #f8fbff;
+      border: 1px solid #d7e3f4;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-top: 16px;
+    }
+    code {
+      background: #e2e8f0;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 13px;
+    }
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      overflow-x: auto;
+      font-size: 14px;
+    }
+    .two-column {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+    .snippet {
+      border: 1px solid #c3d7ed;
+      border-radius: 10px;
+      padding: 14px 16px;
+      background: #fff;
+    }
+    .snippet h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      color: #0f7a8c;
+    }
+    .footer-note {
+      margin-top: 40px;
+      font-size: 13px;
+      color: #475569;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main class="guide">
+    <header>
+      <h1>Dynamic Expression Quick Guide</h1>
+      <p>Use this reference to build attribute-based rules with confidence—no coding experience required.</p>
+    </header>
+
+    <section>
+      <h2>When to Use Expressions</h2>
+      <p>Expressions let you describe membership logic with attribute comparisons instead of static lists. They’re ideal when you need to combine two or more fields&mdash;for example, “Contractors in the Permian office” or “Active employees with the Responder tag”.</p>
+    </section>
+
+    <section>
+      <h2>Syntax Essentials</h2>
+      <div class="card">
+        <ul>
+          <li>Use lowercase logical operators: <code>and</code>, <code>or</code>, <code>not</code>.</li>
+          <li>Wrap text values in double quotes: <code>location == "Houston HQ"</code>.</li>
+          <li>Numbers (such as <code>tenureDays</code>) do not need quotes.</li>
+          <li>Use <code>contains(listField, "value")</code> for array fields like <code>tags</code> or <code>directoryGroups</code>.</li>
+          <li>Expressions are case-sensitive—match the field names exactly as shown below.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Available Fields</h2>
+      <div class="two-column">
+        <ul>
+          <li><code>employmentType</code></li>
+          <li><code>location</code></li>
+          <li><code>role</code></li>
+          <li><code>department</code></li>
+          <li><code>manager</code></li>
+        </ul>
+        <ul>
+          <li><code>tags</code></li>
+          <li><code>directoryGroups</code></li>
+          <li><code>tenureDays</code></li>
+          <li><code>orgUnit</code></li>
+          <li><code>active</code> (true/false)</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Operators &amp; Helpers</h2>
+      <div class="card">
+        <ul>
+          <li><code>==</code>, <code>!=</code> &mdash; equals / does not equal</li>
+          <li><code>&gt;</code>, <code>&gt;=</code>, <code>&lt;</code>, <code>&lt;=</code> &mdash; numeric comparisons (use with <code>tenureDays</code>)</li>
+          <li><code>contains(list, value)</code> &mdash; checks whether a value exists inside an array field (tags, directoryGroups)</li>
+          <li><code>not</code> &mdash; negates a condition (<code>not active</code>)</li>
+          <li>Group conditions with parentheses: <code>(A and B) or C</code></li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Ready-to-Use Snippets</h2>
+      <div class="snippet">
+        <h3>Contractors in Permian Field Office</h3>
+        <pre>employmentType == "Contractor" and location == "Permian Field Office"</pre>
+      </div>
+      <div class="snippet">
+        <h3>Responders Who Report to Alex Rivera</h3>
+        <pre>contains(tags, "Responder") and manager == "Alex Rivera"</pre>
+      </div>
+      <div class="snippet">
+        <h3>Ops Operators with 1+ Year Tenure</h3>
+        <pre>contains(directoryGroups, "DL_Permian_Operators") and tenureDays &gt;= 365</pre>
+      </div>
+      <div class="snippet">
+        <h3>Active Employees Outside Houston</h3>
+        <pre>active and location != "Houston HQ"</pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>Troubleshooting</h2>
+      <div class="card">
+        <ul>
+          <li><strong>Invalid syntax:</strong> check for uppercase <code>AND/OR</code>, missing quotes, or unmatched parentheses.</li>
+          <li><strong>No matches:</strong> simplify the expression to a single condition to confirm each part returns results.</li>
+          <li><strong>Array fields:</strong> always use <code>contains</code> for <code>tags</code> and <code>directoryGroups</code>; equality will not work.</li>
+        </ul>
+      </div>
+    </section>
+
+    <p class="footer-note">Need help? Share the expression you are trying to build with your admin or support contact.</p>
+  </main>
+</body>
+</html>

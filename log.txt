@@ -559,3 +559,45 @@ admin @ 127.0.0.1 - - [09/Nov/2025 13:16:11] "POST /api/apply HTTP/1.1" 200 - SU
   Removed: 0 (-)
   Audit: a_90faa6f3d2684b75ab12cce4bd750dc0
   Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 22:32:51] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Sam Contractor
+  Added: 0 (-)
+  Removed: 1 (Sam Contractor)
+  Audit: a_305d8e1c64c34290a84081ce11e73aab
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 22:32:53] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Devon Price
+  Added: 0 (-)
+  Removed: 1 (Devon Price)
+  Audit: a_016b7582ff034ccdaf2640199f8ee137
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 22:32:56] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Alex Rivera
+  Added: 0 (-)
+  Removed: 1 (Alex Rivera)
+  Audit: a_262e43062e174a1991393a75c5025bb5
+  Policy Notes: None
+admin @ 127.0.0.1 - - [09/Nov/2025 22:36:13] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> all users
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_13665699e8814afaa2dc8f1279292374
+  Policy Notes: No users matched this rule.
+admin @ 127.0.0.1 - - [09/Nov/2025 22:39:58] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> all users
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_8726bd1e0af54fe38182d9cc116c1541
+  Policy Notes: No users matched this rule.
+admin @ 127.0.0.1 - - [09/Nov/2025 23:24:50] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Dynamic Expression -> active == 1
+  Added: 8 (Jane Doe, Erika Howard, Frank Patel, Sam Contractor, Maria Gonzales)
+  Removed: 0 (-)
+  Audit: a_37879c81ff0e48578bb8108c6d92468e
+  Policy Notes: Dynamic expressions evaluate against live demo attributes.

@@ -569,20 +569,87 @@
   function handleRunPrompt() {
     const prompt = (dlcPromptInput?.value || "").trim();
     if (!prompt) {
-      highlightExpressionDrawer(false);
       setPromptStatus("Enter a prompt before running.", "error");
       return;
     }
 
     startPromptSpinner();
-    highlightExpressionDrawer(true);
-    demoRuleSelect.value = "expression";
-    populateValues("expression");
+    apiFetch("/api/nlp/parse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: prompt })
+    })
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(body => {
+            throw new Error(body?.error || `NLP parse failed (${res.status})`);
+          });
+        }
+        return res.json();
+      })
+      .then(result => {
+        const status = applyNlpSuggestion(result);
+        stopPromptSpinner(status.message, status.type);
+      })
+      .catch(err => {
+        console.error("NLP prompt error", err);
+        stopPromptSpinner(`Prompt parse failed: ${err.message}`, "error");
+      });
+  }
 
-    setTimeout(() => {
-      highlightExpressionDrawer(false);
-      stopPromptSpinner("Prompt ready. Review the expression, then propose.", "success");
-    }, 800);
+  const INTENT_TO_ACTION = {
+    "add_rule": "add",
+    "remove_rule": "remove",
+    "edit_rule": "edit",
+    "employee_record_set": "edit",
+    "employee_record_clear": "remove",
+    "expression_rule": "add"
+  };
+
+  function applyNlpSuggestion(result) {
+    if (!result || result.error) {
+      return { message: result?.error || "Prompt parsing failed.", type: "error" };
+    }
+    const slots = result.slots || {};
+    const intent = (result.intent || "").toLowerCase();
+    const action = INTENT_TO_ACTION[intent];
+    if (action && demoAction) {
+      demoAction.value = action;
+    }
+
+    if (slots.expression) {
+      demoRuleSelect.value = "expression";
+      populateValues("expression");
+      if (expressionInput) {
+        expressionInput.value = slots.expression;
+      }
+      highlightExpressionDrawer(true);
+      setTimeout(() => highlightExpressionDrawer(false), 1000);
+      updateSummary();
+      return { message: "Expression drafted. Review before proposing.", type: "success" };
+    }
+
+    const ruleType = (slots.rule_type || "").toLowerCase();
+    const value = slots.rule_value || slots.location || slots.user || slots.group;
+    if (ruleType && RULE_METADATA[ruleType]) {
+      demoRuleSelect.value = ruleType;
+      populateValues(ruleType);
+      if (value && demoValueSelect) {
+        const match = Array.from(demoValueSelect.options).find(
+          opt => opt.value.toLowerCase() === value.toLowerCase()
+        );
+        if (match) {
+          demoValueSelect.value = match.value;
+        } else {
+          const opt = new Option(value, value, true, true);
+          demoValueSelect.add(opt);
+        }
+      }
+      updateSummary();
+      return { message: `Suggested ${ruleType} rule populated.`, type: "success" };
+    }
+
+    return { message: "Prompt parsed, but no matching rule fields identified.", type: "info" };
   }
 
   function populateValues(ruleKey) {

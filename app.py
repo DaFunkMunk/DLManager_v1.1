@@ -4,6 +4,7 @@ import os
 import datetime
 import subprocess
 from datetime import timedelta
+from pathlib import Path
 from typing import Optional
 
 try:
@@ -14,6 +15,7 @@ except ImportError:  # pragma: no cover - optional dependency
 from adapters.base import DirectoryAdapter
 from adapters.standard_adapter import StandardAdapter
 from adapters.demo_adapter import DemoAdapter
+from nlp.parser import IntentSlotParser
 
 #python app.py 
 #start chrome --app=http://127.0.0.1:5000
@@ -48,6 +50,7 @@ MODE_DEFAULT = os.getenv("DEFAULT_MODE", MODE_STANDARD).lower()
 
 standard_adapter = StandardAdapter(conn_str=conn_str)
 _demo_adapter: Optional[DirectoryAdapter] = None
+_intent_parser: Optional[IntentSlotParser] = None
 
 
 def _get_demo_adapter() -> Optional[DirectoryAdapter]:
@@ -73,6 +76,15 @@ def _get_demo_adapter() -> Optional[DirectoryAdapter]:
 
     _demo_adapter = adapter
     return _demo_adapter
+
+
+def _get_intent_parser() -> IntentSlotParser:
+    global _intent_parser
+    if _intent_parser is None:
+        model_dir = Path("models/intent_slot")
+        synonyms = Path("nlp_synonyms.json")
+        _intent_parser = IntentSlotParser(model_dir=model_dir, synonyms_path=synonyms)
+    return _intent_parser
 
 
 def _resolve_mode() -> str:
@@ -102,6 +114,30 @@ def require_login():
         return jsonify({"error": "auth_required"}), 401
 
     return redirect('/login')
+
+@app.route('/api/nlp/parse', methods=['POST'])
+def api_nlp_parse():
+    payload = request.get_json(force=True, silent=True) or {}
+    text = (payload.get("text") or "").strip()
+    if not text:
+        return jsonify({"error": "Prompt text is required."}), 400
+    try:
+        parser = _get_intent_parser()
+        result = parser.parse(text)
+    except FileNotFoundError as exc:
+        return jsonify({"error": f"NLP model assets missing: {exc}"}), 503
+    except Exception as exc:  # pragma: no cover - defensive
+        return jsonify({"error": str(exc)}), 500
+
+    return jsonify(
+        {
+            "intent": result.intent,
+            "confidence": result.confidence,
+            "slots": result.slots,
+            "tokens": result.tokens,
+        }
+    )
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

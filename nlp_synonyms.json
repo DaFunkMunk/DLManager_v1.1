@@ -1,0 +1,81 @@
+{
+  "rule_type": {
+    "user": ["user", "member", "person", "individual", "all users", "everyone", "every user", "whole company", "entire company"],
+    "location": ["location", "office", "site"],
+    "role": ["role", "title", "job", "job title", "position"],
+    "employment-type": ["employment type", "employment", "status", "contract type"],
+    "manager": ["manager", "lead", "supervisor", "team lead"],
+    "directory-group": ["directory group", "dl", "distribution list", "dl group"],
+    "tag": ["tag", "attribute", "label"],
+    "tenure-window": ["tenure window", "tenure band", "tenure range", "tenure bucket"],
+    "saved-filter": ["saved filter", "saved search", "preset"],
+    "expression": ["expression", "dynamic expression", "rule expression", "query"],
+    "employee-record": ["employee record", "profile", "record"]
+  },
+  "value_synonyms": {
+    "location": {
+      "permian field office": ["permian office", "permian", "permian field"],
+      "midland regional hq": ["midland hq", "midland", "midland regional"],
+      "houston hq": ["houston", "houston office", "houston headquarters"],
+      "remote": ["remote", "work from home", "wfh"]
+    },
+    "employment-type": {
+      "full-time": ["full time", "ft", "employee"],
+      "contractor": ["contract", "consultant", "contractors"],
+      "intern": ["intern", "internship"]
+    },
+    "role": {
+      "operations manager": ["ops manager", "operations lead", "operations managers"],
+      "production engineer": ["prod engineer", "production eng"],
+      "pipeline coordinator": ["pipeline coord", "pipeline lead"],
+      "contract technician": ["contract tech"],
+      "hse specialist": ["hse", "safety specialist"],
+      "drilling supervisor": ["drilling lead"],
+      "it systems analyst": ["systems analyst", "it analyst"],
+      "data scientist": ["data sci"]
+    },
+    "manager": {
+      "casey lee": ["casey", "casey l"],
+      "alex rivera": ["alex", "alex r"],
+      "maria gonzales": ["maria", "maria g"],
+      "erika howard": ["erika", "erika h"]
+    },
+    "directory-group": {
+      "dl_permian_operators": ["permian operators", "operators dl"],
+      "dl_permian_engineers": ["permian engineers", "engineers dl"],
+      "dl_hse_responders": ["hse responders", "responders dl"],
+      "dl_corporate_it": ["corporate it", "it dl", "corporate tech"],
+      "dl_data_analytics": ["data analytics", "analytics dl"],
+      "dl_leadership": ["leadership dl"]
+    },
+    "tags": {
+      "operations": ["ops"],
+      "responder": ["responders"],
+      "hse": ["safety"],
+      "ai": ["artificial intelligence"],
+      "analytics": ["data analytics tag"],
+      "leadership": ["leaders"]
+    },
+    "user": {
+      "all users": [
+        "all users",
+        "all",
+        "everyone",
+        "every user",
+        "entire company",
+        "whole company",
+        "all people",
+        "all employees",
+        "full roster"
+      ]
+    }
+  },
+  "boolean_values": {
+    "active": ["active", "enabled", "on", "true"],
+    "inactive": ["inactive", "disabled", "off", "false"]
+  },
+  "tenure_phrases": {
+    "less_than_30": ["less than 30 days", "<30 days", "ending soon"],
+    "greater_than_365": ["over a year", "365+ days", "more than 12 months"]
+  }
+}
