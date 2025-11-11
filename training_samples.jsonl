@@ -31,3 +31,31 @@
 {"text": "Remove the manager field for Alex Rivera", "intent": "employee_record_clear", "slots": {"user": "Alex Rivera", "fields_to_clear": ["manager"]}}
 {"text": "Expression for Houston interns under Casey", "intent": "expression_rule", "slots": {"expression": "employmentType == \"Intern\" and location == \"houston hq\" and manager == \"casey lee\""}}
 {"text": "Expression for remote contractors", "intent": "expression_rule", "slots": {"expression": "employmentType == \"Contractor\" and location == \"remote\""}}
+{"text": "Turn Sam Contractor inactive for now", "intent": "employee_record_set", "slots": {"user": "Sam Contractor", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Set Alex Rivera back to active", "intent": "employee_record_set", "slots": {"user": "Alex Rivera", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Deactivate Jane Doe again", "intent": "employee_record_set", "slots": {"user": "Jane Doe", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Re-enable Erika Howard", "intent": "employee_record_set", "slots": {"user": "Erika Howard", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Mark Devon Price as inactive again", "intent": "employee_record_set", "slots": {"user": "Devon Price", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Switch Maria Gonzales back on", "intent": "employee_record_set", "slots": {"user": "Maria Gonzales", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Keep Frank Patel active please", "intent": "employee_record_set", "slots": {"user": "Frank Patel", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Make Sam Contractor inactive again", "intent": "employee_record_set", "slots": {"user": "Sam Contractor", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Turn off active status for Casey Lee", "intent": "employee_record_set", "slots": {"user": "Casey Lee", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Turn on Alex Rivera's active status", "intent": "employee_record_set", "slots": {"user": "Alex Rivera", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Bring Jane Doe back online", "intent": "employee_record_set", "slots": {"user": "Jane Doe", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Disable Erika Howard temporarily", "intent": "employee_record_set", "slots": {"user": "Erika Howard", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Enable Devon Price's account", "intent": "employee_record_set", "slots": {"user": "Devon Price", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Make Frank Patel inactive for now", "intent": "employee_record_set", "slots": {"user": "Frank Patel", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Turn Sam Contractor inactive for now", "intent": "employee_record_set", "slots": {"user": "Sam Contractor", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Set Alex Rivera back to active", "intent": "employee_record_set", "slots": {"user": "Alex Rivera", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Deactivate Jane Doe again", "intent": "employee_record_set", "slots": {"user": "Jane Doe", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Re-enable Erika Howard", "intent": "employee_record_set", "slots": {"user": "Erika Howard", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Mark Devon Price as inactive again", "intent": "employee_record_set", "slots": {"user": "Devon Price", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Switch Maria Gonzales back on", "intent": "employee_record_set", "slots": {"user": "Maria Gonzales", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Keep Frank Patel active please", "intent": "employee_record_set", "slots": {"user": "Frank Patel", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Make Sam Contractor inactive again", "intent": "employee_record_set", "slots": {"user": "Sam Contractor", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Turn off active status for Casey Lee", "intent": "employee_record_set", "slots": {"user": "Casey Lee", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Turn on Alex Rivera's active status", "intent": "employee_record_set", "slots": {"user": "Alex Rivera", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Bring Jane Doe back online", "intent": "employee_record_set", "slots": {"user": "Jane Doe", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Disable Erika Howard temporarily", "intent": "employee_record_set", "slots": {"user": "Erika Howard", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Enable Devon Price's account", "intent": "employee_record_set", "slots": {"user": "Devon Price", "field_updates": [{"field": "active", "value": true}]} }
+{"text": "Make Frank Patel inactive for now", "intent": "employee_record_set", "slots": {"user": "Frank Patel", "field_updates": [{"field": "active", "value": false}]} }

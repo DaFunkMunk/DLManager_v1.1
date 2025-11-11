@@ -686,18 +686,33 @@
       return;
     }
     const lower = name.toLowerCase();
-    const match = Array.from(demoValueSelect.options).find(
+    const options = Array.from(demoValueSelect.options).filter(option => !option.disabled);
+
+    let match = options.find(
       option => option.value.toLowerCase() === lower || option.textContent.toLowerCase() === lower
     );
+
+    if (!match) {
+      const fuzzyMatches = options.filter(option => {
+        const text = option.textContent.toLowerCase();
+        const value = option.value.toLowerCase();
+        return text.startsWith(lower) || value.startsWith(lower);
+      });
+      if (fuzzyMatches.length === 1) {
+        match = fuzzyMatches[0];
+      }
+    }
+
     if (match) {
       demoValueSelect.value = match.value;
       pendingEmployeeRecordUser = null;
-    } else {
-      pendingEmployeeRecordUser = name;
-      const opt = new Option(name, name, true, true);
-      demoValueSelect.add(opt);
-      demoValueSelect.value = name;
+      return;
     }
+
+    pendingEmployeeRecordUser = name;
+    const opt = new Option(name, name, true, true);
+    demoValueSelect.add(opt);
+    demoValueSelect.value = name;
   }
 
   function applyEmployeeRecordUpdates(updates) {

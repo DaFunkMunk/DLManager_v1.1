@@ -228,15 +228,22 @@ class IntentSlotParser:
         clears: List[str] = []
         lowered = text.lower()
 
+        def _matches_toggle(keyword: str) -> bool:
+            pattern = rf"(?:make|set|turn|keep)\s+(?:[\w']+\s+){{0,4}}\b{keyword}\b"
+            return re.search(pattern, lowered) is not None
+
         if intent == "employee_record_set":
             if "tenure" in lowered:
                 match = re.search(r"(\d+)\s*(?:day|days)", lowered)
                 if match:
                     updates.append({"field": "tenureDays", "value": int(match.group(1))})
 
-            if any(word in lowered for word in ["deactivate", "set inactive", "make inactive", "turn off"]):
+            inactive_keywords = ["deactivate", "set inactive", "make inactive", "turn off", "mark inactive", "inactive again"]
+            active_keywords = ["activate", "reactivate", "make active", "set active", "active again"]
+
+            if any(word in lowered for word in inactive_keywords) or _matches_toggle("inactive"):
                 updates.append({"field": "active", "value": False})
-            elif any(word in lowered for word in ["activate", "reactivate", "make active", "set active"]):
+            elif any(word in lowered for word in active_keywords) or _matches_toggle("active"):
                 updates.append({"field": "active", "value": True})
 
             manager = self._match_canonical_value("manager", lowered)
