@@ -1,0 +1,10 @@
+[
+  { "_id": "role_operations_manager", "order": 1, "value": "Operations Manager", "label": "Operations Manager" },
+  { "_id": "role_production_engineer", "order": 2, "value": "Production Engineer", "label": "Production Engineer" },
+  { "_id": "role_pipeline_coordinator", "order": 3, "value": "Pipeline Coordinator", "label": "Pipeline Coordinator" },
+  { "_id": "role_contract_technician", "order": 4, "value": "Contract Technician", "label": "Contract Technician" },
+  { "_id": "role_hse_specialist", "order": 5, "value": "HSE Specialist", "label": "HSE Specialist" },
+  { "_id": "role_drilling_supervisor", "order": 6, "value": "Drilling Supervisor", "label": "Drilling Supervisor" },
+  { "_id": "role_it_systems_analyst", "order": 7, "value": "IT Systems Analyst", "label": "IT Systems Analyst" },
+  { "_id": "role_data_scientist", "order": 8, "value": "Data Scientist", "label": "Data Scientist" }
+]

@@ -1,0 +1,61 @@
+{"text": "Add all users to ACL_EVIN-North", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.284549Z"}
+{"text": "Add everyone to ACL_EVIN-North", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.291533Z"}
+{"text": "Add contractors in the Permian office", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.295523Z"}
+{"text": "Add Houston HQ staff to ACL_EVIN-North", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.298514Z"}
+{"text": "Add operations managers to this group", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.302503Z"}
+{"text": "Add everyone reporting to Casey Lee", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.309484Z"}
+{"text": "Add the entire DL_Permian_Operators list", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.316466Z"}
+{"text": "Add users tagged Responder", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.323449Z"}
+{"text": "Add Jane Doe to ACL_EVIN-North", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.328434Z"}
+{"text": "Add contractors in Permian with tenure over a year", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.336411Z"}
+{"text": "Add active responders in Midland HQ", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.341398Z"}
+{"text": "Remove Jane Doe from ACL_EVIN-North", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.346385Z"}
+{"text": "Drop the Houston HQ rule", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.352368Z"}
+{"text": "Remove contractors entirely", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.355360Z"}
+{"text": "Stop pulling members from DL_Permian_Operators", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.359351Z"}
+{"text": "Remove everyone reporting to Alex Rivera", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.362342Z"}
+{"text": "Remove users tagged Responder", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.375307Z"}
+{"text": "Switch the Permian location rule to Midland HQ", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.379296Z"}
+{"text": "Change the contractor rule to interns", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.386278Z"}
+{"text": "Retarget the manager rule from Alex Rivera to Maria Gonzales", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.392262Z"}
+{"text": "Replace DL_Permian_Operators with DL_Data_Analytics", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.398248Z"}
+{"text": "Update Jane Doe's tenure to 450 days", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.409217Z"}
+{"text": "Set Sam Contractor to inactive", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.416200Z"}
+{"text": "Change Devon Price's manager to Maria Gonzales", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.423180Z"}
+{"text": "Give Erika Howard the Houston HQ location", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.428167Z"}
+{"text": "Update Jane Doe's manager to Casey Lee", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.436145Z"}
+{"text": "Make Maria Gonzales active again", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.440135Z"}
+{"text": "Deactivate Alex Rivera", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.445120Z"}
+{"text": "Clear the location for Devon Price", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.455094Z"}
+{"text": "Clear tenure days for Jane Doe", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.461079Z"}
+{"text": "Remove the manager field for Alex Rivera", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.471051Z"}
+{"text": "Expression for Houston interns under Casey", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.475041Z"}
+{"text": "Expression for remote contractors", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.480027Z"}
+{"text": "Turn Sam Contractor inactive for now", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.486011Z"}
+{"text": "Set Alex Rivera back to active", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.490998Z"}
+{"text": "Deactivate Jane Doe again", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.496983Z"}
+{"text": "Re-enable Erika Howard", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.503964Z"}
+{"text": "Mark Devon Price as inactive again", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.509947Z"}
+{"text": "Switch Maria Gonzales back on", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.516933Z"}
+{"text": "Keep Frank Patel active please", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.521916Z"}
+{"text": "Make Sam Contractor inactive again", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.525905Z"}
+{"text": "Turn off active status for Casey Lee", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.528896Z"}
+{"text": "Turn on Alex Rivera's active status", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.534881Z"}
+{"text": "Bring Jane Doe back online", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.543857Z"}
+{"text": "Disable Erika Howard temporarily", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.547847Z"}
+{"text": "Enable Devon Price's account", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.554828Z"}
+{"text": "Make Frank Patel inactive for now", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.561809Z"}
+{"text": "Turn Sam Contractor inactive for now", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.567792Z"}
+{"text": "Set Alex Rivera back to active", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.572780Z"}
+{"text": "Deactivate Jane Doe again", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.577766Z"}
+{"text": "Re-enable Erika Howard", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.583752Z"}
+{"text": "Mark Devon Price as inactive again", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.589735Z"}
+{"text": "Switch Maria Gonzales back on", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.594721Z"}
+{"text": "Keep Frank Patel active please", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.598711Z"}
+{"text": "Make Sam Contractor inactive again", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.604695Z"}
+{"text": "Turn off active status for Casey Lee", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.608683Z"}
+{"text": "Turn on Alex Rivera's active status", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.616662Z"}
+{"text": "Bring Jane Doe back online", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.625640Z"}
+{"text": "Disable Erika Howard temporarily", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.629628Z"}
+{"text": "Enable Devon Price's account", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.635611Z"}
+{"text": "Make Frank Patel inactive for now", "error": "API request failed (401): {\n  \"error\": \"auth_required\"\n}\n", "success": false, "timestamp": "2025-11-11T03:05:34.639600Z"}

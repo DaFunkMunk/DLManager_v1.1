@@ -619,7 +619,7 @@ body {
   color: #2f3c48;
   max-height: 200px;
   overflow-y: auto;
-  padding-bottom: 40px;
+  padding-bottom: 0px;
 }
 
 .preview-card__changes li + li {

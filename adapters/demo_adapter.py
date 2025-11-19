@@ -48,6 +48,14 @@ class DemoAdapter(DirectoryAdapter):
         ],
         "employment-type": ["Full-time", "Contractor", "Intern"],
         "tag": ["Operations", "Responder", "HSE", "AI", "Analytics", "Leadership"],
+        "department": [
+            "Permian Operations",
+            "Corporate IT",
+            "HSE",
+            "South Operations",
+            "East Projects",
+            "Analytics Guild",
+        ],
         "directory-group": [
             "DL_Permian_Operators",
             "DL_Permian_Engineers",
@@ -79,7 +87,7 @@ class DemoAdapter(DirectoryAdapter):
         "Contractors Ending Soon": lambda doc: doc.get("employmentType") == "Contractor" and doc.get("tenureDays", 0) <= 30,
     }
 
-    EMPLOYEE_RECORD_FIELDS: List[Dict[str, Any]] = [
+    DEFAULT_EMPLOYEE_RECORD_FIELDS: List[Dict[str, Any]] = [
         {
             "name": "employmentType",
             "label": "Employment Type",
@@ -96,14 +104,7 @@ class DemoAdapter(DirectoryAdapter):
             "name": "department",
             "label": "Department",
             "type": "select",
-            "options": [{"value": value, "label": value} for value in [
-                "Permian Operations",
-                "Corporate IT",
-                "HSE",
-                "South Operations",
-                "East Projects",
-                "Analytics Guild",
-            ]],
+            "options": [{"value": value, "label": value} for value in STATIC_VALUE_FIELDS["department"]],
         },
         {
             "name": "location",
@@ -154,9 +155,38 @@ class DemoAdapter(DirectoryAdapter):
         self._option_actions: Collection = self._db["dl_actions"]
         self._option_groups: Collection = self._db["dl_groups"]
         self._option_rules: Collection = self._db["dl_rules"]
-        self._employee_record_field_map: Dict[str, Dict[str, Any]] = {
-            field["name"]: field for field in self.EMPLOYEE_RECORD_FIELDS
+        self._option_employment_types: Collection = self._db["dl_employment_types"]
+        self._option_roles: Collection = self._db["dl_roles"]
+        self._option_departments: Collection = self._db["dl_departments"]
+        self._option_locations: Collection = self._db["dl_locations"]
+        self._option_managers: Collection = self._db["dl_managers"]
+
+        self._employee_field_sources: Dict[str, Dict[str, Any]] = {
+            "employmentType": {
+                "collection": self._option_employment_types,
+                "fallback": self.STATIC_VALUE_FIELDS["employment-type"],
+            },
+            "role": {
+                "collection": self._option_roles,
+                "fallback": self.STATIC_VALUE_FIELDS["role"],
+            },
+            "department": {
+                "collection": self._option_departments,
+                "fallback": self.STATIC_VALUE_FIELDS["department"],
+            },
+            "location": {
+                "collection": self._option_locations,
+                "fallback": self.STATIC_VALUE_FIELDS["location"],
+            },
+            "manager": {
+                "collection": self._option_managers,
+                "fallback": self.STATIC_VALUE_FIELDS["manager"],
+            },
         }
+
+        self._employee_record_fields: List[Dict[str, Any]] = []
+        self._employee_record_field_map: Dict[str, Dict[str, Any]] = {}
+        self.refresh_employee_record_fields()
 
         self._ensure_indexes()
         auto_seed = os.getenv("DEMO_AUTO_SEED", "true").lower() in {"1", "true", "yes", "on"}
@@ -183,6 +213,11 @@ class DemoAdapter(DirectoryAdapter):
             (self._option_actions, [("order", ASCENDING)], {"name": "idx_actions_order"}),
             (self._option_groups, [("order", ASCENDING)], {"name": "idx_dl_groups_order"}),
             (self._option_rules, [("order", ASCENDING)], {"name": "idx_rules_order"}),
+            (self._option_employment_types, [("order", ASCENDING)], {"name": "idx_employment_types_order"}),
+            (self._option_roles, [("order", ASCENDING)], {"name": "idx_roles_order"}),
+            (self._option_departments, [("order", ASCENDING)], {"name": "idx_departments_order"}),
+            (self._option_locations, [("order", ASCENDING)], {"name": "idx_locations_order"}),
+            (self._option_managers, [("order", ASCENDING)], {"name": "idx_managers_order"}),
             (self._rule_events, [("groupId", ASCENDING), ("timestamp", DESCENDING)], {"name": "idx_events_group_ts"}),
             (self._rule_events, [("groupId", ASCENDING), ("ruleType", ASCENDING), ("timestamp", DESCENDING)], {"name": "idx_events_group_rule_ts"}),
         ]
@@ -206,6 +241,11 @@ class DemoAdapter(DirectoryAdapter):
                 self._option_actions,
                 self._option_groups,
                 self._option_rules,
+                self._option_employment_types,
+                self._option_roles,
+                self._option_departments,
+                self._option_locations,
+                self._option_managers,
                 self._rule_events,
             ):
                 collection.delete_many({})
@@ -444,10 +484,37 @@ class DemoAdapter(DirectoryAdapter):
             for option in group_options:
                 self._option_groups.update_one({"_id": option["_id"]}, {"$set": option}, upsert=True)
 
+        select_option_seeds = [
+            (self._option_employment_types, "employment", self.STATIC_VALUE_FIELDS["employment-type"]),
+            (self._option_roles, "role", self.STATIC_VALUE_FIELDS["role"]),
+            (self._option_departments, "department", self.STATIC_VALUE_FIELDS["department"]),
+            (self._option_locations, "location", self.STATIC_VALUE_FIELDS["location"]),
+            (self._option_managers, "manager", self.STATIC_VALUE_FIELDS["manager"]),
+        ]
+
+        for collection, prefix, values in select_option_seeds:
+            if not values:
+                continue
+            if force or collection.estimated_document_count() == 0:
+                docs = []
+                for order, value in enumerate(values, start=1):
+                    docs.append(
+                        {
+                            "_id": f"{prefix}_{order}",
+                            "value": value,
+                            "label": value,
+                            "order": order,
+                        }
+                    )
+                if docs:
+                    collection.insert_many(docs)
+
         def as_options(values: Iterable[str]) -> List[Dict[str, str]]:
             return [{"value": value, "label": value} for value in values]
 
         saved_filter_values = as_options(self.SAVED_FILTERS.keys())
+
+        employee_record_fields = self.get_employee_record_fields(refresh=True)
 
         rule_options_seed = [
             {"_id": "user", "label": "User", "order": 1, "valueSource": "employees"},
@@ -461,7 +528,7 @@ class DemoAdapter(DirectoryAdapter):
             {"_id": "manager", "label": "Manager / Team Lead", "order": 9, "valueSource": "static", "staticValues": as_options(["Casey Lee", "Alex Rivera", "Maria Gonzales", "Erika Howard"])},
             {"_id": "saved-filter", "label": "Saved Filter", "order": 10, "valueSource": "static", "staticValues": saved_filter_values},
             {"_id": "expression", "label": "Dynamic Expression", "order": 11, "valueSource": "expression"},
-            {"_id": "employee-record", "label": "Employee Record", "order": 12, "valueSource": "employee-record", "recordFields": deepcopy(self.EMPLOYEE_RECORD_FIELDS)},
+            {"_id": "employee-record", "label": "Employee Record", "order": 12, "valueSource": "employee-record", "recordFields": deepcopy(employee_record_fields)},
         ]
 
         for option in rule_options_seed:
@@ -469,6 +536,44 @@ class DemoAdapter(DirectoryAdapter):
             option.setdefault("staticValues", [])
             option.setdefault("recordFields", [])
             self._option_rules.update_one({"_id": option["_id"]}, {"$set": option}, upsert=True)
+
+    def _load_select_options(self, collection: Collection, fallback: List[str]) -> List[Dict[str, Any]]:
+        fallback_values = fallback or []
+        docs = list(collection.find({}).sort("order", ASCENDING))
+        if not docs:
+            return [{"value": value, "label": value} for value in fallback_values]
+        options: List[Dict[str, Any]] = []
+        for doc in docs:
+            value = doc.get("value") or doc.get("_id")
+            label = doc.get("label") or value
+            if not value:
+                continue
+            options.append({"value": value, "label": label})
+        return options or [{"value": value, "label": value} for value in fallback_values]
+
+    def _build_employee_record_fields(self) -> List[Dict[str, Any]]:
+        fields = deepcopy(self.DEFAULT_EMPLOYEE_RECORD_FIELDS)
+        for field in fields:
+            if field.get("type") != "select":
+                continue
+            source = self._employee_field_sources.get(field["name"])
+            if not source:
+                continue
+            collection = source["collection"]
+            fallback = source.get("fallback") or []
+            field["options"] = self._load_select_options(collection, fallback)
+        return fields
+
+    def refresh_employee_record_fields(self) -> List[Dict[str, Any]]:
+        fields = self._build_employee_record_fields()
+        self._employee_record_fields = fields
+        self._employee_record_field_map = {field["name"]: field for field in fields}
+        return deepcopy(fields)
+
+    def get_employee_record_fields(self, refresh: bool = False) -> List[Dict[str, Any]]:
+        if refresh or not self._employee_record_fields:
+            return self.refresh_employee_record_fields()
+        return deepcopy(self._employee_record_fields)
 
     def _propose_employee_record(
         self,
@@ -771,14 +876,19 @@ class DemoAdapter(DirectoryAdapter):
     def list_demo_rules(self) -> List[Dict[str, Any]]:
         cursor = self._option_rules.find().sort("order", ASCENDING)
         rules: List[Dict[str, Any]] = []
+        employee_fields = self.get_employee_record_fields(refresh=True)
         for doc in cursor:
+            value = doc.get("value") or doc.get("_id")
+            record_fields = doc.get("recordFields", [])
+            if value == "employee-record":
+                record_fields = deepcopy(employee_fields)
             rules.append(
                 {
-                    "value": doc.get("value") or doc.get("_id"),
+                    "value": value,
                     "label": doc.get("label") or doc.get("_id"),
                     "valueSource": doc.get("valueSource") or "static",
                     "staticValues": doc.get("staticValues", []),
-                    "recordFields": doc.get("recordFields", []),
+                    "recordFields": record_fields,
                 }
             )
         return rules

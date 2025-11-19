@@ -608,3 +608,52 @@ admin @ 127.0.0.1 - - [10/Nov/2025 16:58:04] "POST /api/apply HTTP/1.1" 200 - SU
   Removed: 0 (-)
   Audit: a_68fdd1f9ca9746fb94ddd0b8da8152f1
   Policy Notes: None
+admin @ 127.0.0.1 - - [11/Nov/2025 00:22:16] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employee Record -> Alex Rivera
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_87c56cae27b54ef983fa397132f171f2
+  Policy Notes: None
+admin @ 127.0.0.1 - - [11/Nov/2025 00:23:38] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Location -> Permian Field Office
+  Added: 3 (Alex Rivera, Devon Price, Sam Contractor)
+  Removed: 3 (Alex Rivera, Devon Price, Sam Contractor)
+  Audit: a_475175fbd7b840629019abdf670e7176
+  Policy Notes: None
+admin @ 127.0.0.1 - - [11/Nov/2025 00:37:41] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Manager / Team Lead -> Casey Lee
+  Added: 3 (Alex Rivera, Frank Patel, Maria Gonzales)
+  Removed: 3 (Alex Rivera, Frank Patel, Maria Gonzales)
+  Audit: a_2ddde19fdbcc4314bfe05fb1bdec13c0
+  Policy Notes: None
+admin @ 127.0.0.1 - - [11/Nov/2025 00:38:59] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employee Record -> Alex Rivera
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_dffc3f2439f547788fcb2c2dc72610da
+  Policy Notes: None
+admin @ 127.0.0.1 - - [11/Nov/2025 18:51:29] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employee Record -> Jane Doe
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_fccac355de7846fea2a19d2a5eecab18
+  Policy Notes: None
+admin @ 127.0.0.1 - - [11/Nov/2025 19:54:36] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employee Record -> Sam Contractor
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_f558529c359b4cfbac2075e4c2bf3c7f
+  Policy Notes: None
+admin @ 127.0.0.1 - - [11/Nov/2025 21:45:12] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Employee Record -> Jane Doe
+  Added: 0 (-)
+  Removed: 0 (-)
+  Audit: a_e07d10a7b6634eba9fa153751fba7b71
+  Policy Notes: None

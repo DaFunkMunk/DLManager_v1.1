@@ -1,0 +1,8 @@
+[
+  { "_id": "dept_permian_operations", "order": 1, "value": "Permian Operations", "label": "Permian Operations" },
+  { "_id": "dept_corporate_it", "order": 2, "value": "Corporate IT", "label": "Corporate IT" },
+  { "_id": "dept_hse", "order": 3, "value": "HSE", "label": "HSE" },
+  { "_id": "dept_south_operations", "order": 4, "value": "South Operations", "label": "South Operations" },
+  { "_id": "dept_east_projects", "order": 5, "value": "East Projects", "label": "East Projects" },
+  { "_id": "dept_analytics_guild", "order": 6, "value": "Analytics Guild", "label": "Analytics Guild" }
+]

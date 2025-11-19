@@ -615,7 +615,10 @@
     }
     const slots = result.slots || {};
     const intent = (result.intent || "").toLowerCase();
-    const action = INTENT_TO_ACTION[intent];
+    let action = INTENT_TO_ACTION[intent];
+    if (slots.expression_action) {
+      action = slots.expression_action;
+    }
     if (action && demoAction) {
       demoAction.value = action;
     }

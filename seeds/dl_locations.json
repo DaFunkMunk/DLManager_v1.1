@@ -1,0 +1,6 @@
+[
+  { "_id": "loc_permian_field_office", "order": 1, "value": "Permian Field Office", "label": "Permian Field Office" },
+  { "_id": "loc_midland_regional_hq", "order": 2, "value": "Midland Regional HQ", "label": "Midland Regional HQ" },
+  { "_id": "loc_houston_hq", "order": 3, "value": "Houston HQ", "label": "Houston HQ" },
+  { "_id": "loc_remote", "order": 4, "value": "Remote", "label": "Remote" }
+]

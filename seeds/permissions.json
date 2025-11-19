@@ -1,0 +1,38 @@
+[
+  {
+    "_id": "admin",
+    "description": "Full system access",
+    "order": 1,
+    "permissions": [
+      "prompt_run",
+      "propose",
+      "apply",
+      "audit_view",
+      "validator_run",
+      "user_manage"
+    ],
+    "grantableRoles": ["admin", "operator", "viewer"]
+  },
+  {
+    "_id": "operator",
+    "description": "Can run prompts and propose/apply changes",
+    "order": 2,
+    "permissions": [
+      "prompt_run",
+      "propose",
+      "apply",
+      "audit_view"
+    ],
+    "grantableRoles": ["viewer"]
+  },
+  {
+    "_id": "viewer",
+    "description": "Read-only access to prompts and audit trail",
+    "order": 3,
+    "permissions": [
+      "prompt_run",
+      "audit_view"
+    ],
+    "grantableRoles": []
+  }
+]

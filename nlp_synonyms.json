@@ -20,9 +20,9 @@
       "remote": ["remote", "work from home", "wfh"]
     },
     "employment-type": {
-      "full-time": ["full time", "ft", "employee"],
+      "full-time": ["full time", "ft"],
       "contractor": ["contract", "consultant", "contractors"],
-      "intern": ["intern", "internship"]
+      "intern": ["intern", "interns", "internship"]
     },
     "role": {
       "operations manager": ["ops manager", "operations lead", "operations managers"],
@@ -77,5 +77,15 @@
   "tenure_phrases": {
     "less_than_30": ["less than 30 days", "<30 days", "ending soon"],
     "greater_than_365": ["over a year", "365+ days", "more than 12 months"]
-  }
+  },
+  "employee_names": [
+    "Jane Doe",
+    "Sam Contractor",
+    "Devon Price",
+    "Erika Howard",
+    "Frank Patel",
+    "Maria Gonzales",
+    "Alex Rivera",
+    "Casey Lee"
+  ]
 }

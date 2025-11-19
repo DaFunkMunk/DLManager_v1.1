@@ -15,6 +15,10 @@
 {"text": "Stop pulling members from DL_Permian_Operators", "intent": "remove_rule", "slots": {"rule_type": "directory-group", "rule_value": "dl_permian_operators"}}
 {"text": "Remove everyone reporting to Alex Rivera", "intent": "remove_rule", "slots": {"rule_type": "manager", "rule_value": "alex rivera"}}
 {"text": "Remove users tagged Responder", "intent": "remove_rule", "slots": {"rule_type": "tag", "rule_value": "responder"}}
+{"text": "Remove everyone reporting to Casey Lee", "intent": "remove_rule", "slots": {"rule_type": "manager", "rule_value": "casey lee"}}
+{"text": "Add everyone under Maria Gonzales", "intent": "add_rule", "slots": {"rule_type": "manager", "rule_value": "maria gonzales"}}
+{"text": "Remove all reports under Erika Howard", "intent": "remove_rule", "slots": {"rule_type": "manager", "rule_value": "erika howard"}}
+{"text": "Include everyone reporting to Frank Patel", "intent": "add_rule", "slots": {"rule_type": "manager", "rule_value": "frank patel"}}
 {"text": "Switch the Permian location rule to Midland HQ", "intent": "edit_rule", "slots": {"rule_type": "location", "from_value": "permian field office", "to_value": "midland regional hq"}}
 {"text": "Change the contractor rule to interns", "intent": "edit_rule", "slots": {"rule_type": "employment-type", "from_value": "contractor", "to_value": "intern"}}
 {"text": "Retarget the manager rule from Alex Rivera to Maria Gonzales", "intent": "edit_rule", "slots": {"rule_type": "manager", "from_value": "alex rivera", "to_value": "maria gonzales"}}
@@ -31,6 +35,10 @@
 {"text": "Remove the manager field for Alex Rivera", "intent": "employee_record_clear", "slots": {"user": "Alex Rivera", "fields_to_clear": ["manager"]}}
 {"text": "Expression for Houston interns under Casey", "intent": "expression_rule", "slots": {"expression": "employmentType == \"Intern\" and location == \"houston hq\" and manager == \"casey lee\""}}
 {"text": "Expression for remote contractors", "intent": "expression_rule", "slots": {"expression": "employmentType == \"Contractor\" and location == \"remote\""}}
+{"text": "Retarget the manager rule from Alex Rivera to Maria Gonzales", "intent": "edit_rule", "slots": {"rule_type": "manager", "from_value": "alex rivera", "to_value": "maria gonzales"}}
+{"text": "Switch the manager rule from Casey Lee to Frank Patel", "intent": "edit_rule", "slots": {"rule_type": "manager", "from_value": "casey lee", "to_value": "frank patel"}}
+{"text": "Change the manager rule from Devon Price to Erika Howard", "intent": "edit_rule", "slots": {"rule_type": "manager", "from_value": "devon price", "to_value": "erika howard"}}
+{"text": "Swap the manager rule from Maria Gonzales to Alex Rivera", "intent": "edit_rule", "slots": {"rule_type": "manager", "from_value": "maria gonzales", "to_value": "alex rivera"}}
 {"text": "Turn Sam Contractor inactive for now", "intent": "employee_record_set", "slots": {"user": "Sam Contractor", "field_updates": [{"field": "active", "value": false}]} }
 {"text": "Set Alex Rivera back to active", "intent": "employee_record_set", "slots": {"user": "Alex Rivera", "field_updates": [{"field": "active", "value": true}]} }
 {"text": "Deactivate Jane Doe again", "intent": "employee_record_set", "slots": {"user": "Jane Doe", "field_updates": [{"field": "active", "value": false}]} }
@@ -59,3 +67,10 @@
 {"text": "Disable Erika Howard temporarily", "intent": "employee_record_set", "slots": {"user": "Erika Howard", "field_updates": [{"field": "active", "value": false}]} }
 {"text": "Enable Devon Price's account", "intent": "employee_record_set", "slots": {"user": "Devon Price", "field_updates": [{"field": "active", "value": true}]} }
 {"text": "Make Frank Patel inactive for now", "intent": "employee_record_set", "slots": {"user": "Frank Patel", "field_updates": [{"field": "active", "value": false}]} }
+{"text": "Add contractors with tenure over 450 days", "intent": "expression_rule", "slots": {"expression": "employmentType == \"Contractor\" and tenureDays >= 450"}}
+{"text": "Remove interns with tenure under 90 days", "intent": "expression_rule", "slots": {"expression": "employmentType == \"Intern\" and tenureDays <= 90"}}
+{"text": "Add employees with tenure between 120 and 200 days", "intent": "expression_rule", "slots": {"expression": "tenureDays >= 120 and tenureDays <= 200"}}
+{"text": "Remove employees with tenure less than 3 years", "intent": "expression_rule", "slots": {"expression": "tenureDays <= 1095"}}
+{"text": "Add users tagged Analytics", "intent": "add_rule", "slots": {"rule_type": "tag", "rule_value": "analytics"}}
+{"text": "Switch the Houston HQ location rule to Permian Field Office", "intent": "edit_rule", "slots": {"rule_type": "location", "from_value": "houston hq", "to_value": "permian field office"}}
+{"text": "Replace DL_HSE_Responders with DL_Corporate_IT", "intent": "edit_rule", "slots": {"rule_type": "directory-group", "from_value": "dl_hse_responders", "to_value": "dl_corporate_it"}}

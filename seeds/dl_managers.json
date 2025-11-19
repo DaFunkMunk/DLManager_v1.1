@@ -1,0 +1,6 @@
+[
+  { "_id": "mgr_casey_lee", "order": 1, "value": "Casey Lee", "label": "Casey Lee" },
+  { "_id": "mgr_alex_rivera", "order": 2, "value": "Alex Rivera", "label": "Alex Rivera" },
+  { "_id": "mgr_maria_gonzales", "order": 3, "value": "Maria Gonzales", "label": "Maria Gonzales" },
+  { "_id": "mgr_erika_howard", "order": 4, "value": "Erika Howard", "label": "Erika Howard" }
+]

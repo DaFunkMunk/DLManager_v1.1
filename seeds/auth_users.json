@@ -1,0 +1,24 @@
+[
+  {
+    "_id": "auth_admin",
+    "username": "admin",
+    "displayName": "Demo Administrator",
+    "userId": null,
+    "password_hash": "$2b$12$DAF2YqHuwJ6UdspZs02fIemWxGWPkUnDeeaaRZXWFxiPB0gascL.a",
+    "roles": ["admin"],
+    "active": true,
+    "createdAt": { "$date": "2025-11-13T00:00:00Z" },
+    "updatedAt": { "$date": "2025-11-13T00:00:00Z" }
+  },
+  {
+    "_id": "auth_operator",
+    "username": "operator",
+    "displayName": "Demo Operator",
+    "userId": null,
+    "password_hash": "$2b$12$cga3/8WaYLLx9zBpF/UHieSZ25P/12gWWsbQRjsfMpvTw1DNd/Wn.",
+    "roles": ["operator"],
+    "active": true,
+    "createdAt": { "$date": "2025-11-13T00:00:00Z" },
+    "updatedAt": { "$date": "2025-11-13T00:00:00Z" }
+  }
+]

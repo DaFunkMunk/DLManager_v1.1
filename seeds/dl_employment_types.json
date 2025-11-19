@@ -1,0 +1,37 @@
+[
+  {
+    "_id": "employment_full_time",
+    "order": 1,
+    "value": "Full-time",
+    "label": "Full-time",
+    "description": "Permanent employees eligible for full benefits."
+  },
+  {
+    "_id": "employment_part_time",
+    "order": 2,
+    "value": "Part-time",
+    "label": "Part-time",
+    "description": "Employees scheduled for reduced weekly hours."
+  },
+  {
+    "_id": "employment_contractor",
+    "order": 3,
+    "value": "Contractor",
+    "label": "Contractor",
+    "description": "External resources engaged under contract."
+  },
+  {
+    "_id": "employment_temporary",
+    "order": 4,
+    "value": "Temporary",
+    "label": "Temporary",
+    "description": "Short-term or temp staff assignments."
+  },
+  {
+    "_id": "employment_intern",
+    "order": 5,
+    "value": "Intern",
+    "label": "Intern",
+    "description": "Interns or apprentices."
+  }
+]
