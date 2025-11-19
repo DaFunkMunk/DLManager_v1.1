@@ -4,7 +4,7 @@ import datetime as dt
 import uuid
 from copy import deepcopy
 import os
-from typing import Any, Dict, List, Optional, Callable, Iterable
+from typing import Any, Dict, List, Optional, Callable, Iterable, Set, Tuple
 
 from pymongo import ASCENDING, DESCENDING, MongoClient
 from pymongo.collection import Collection
@@ -155,6 +155,8 @@ class DemoAdapter(DirectoryAdapter):
         self._option_actions: Collection = self._db["dl_actions"]
         self._option_groups: Collection = self._db["dl_groups"]
         self._option_rules: Collection = self._db["dl_rules"]
+        self._auth_users: Collection = self._db["auth_users"]
+        self._permissions: Collection = self._db["permissions"]
         self._option_employment_types: Collection = self._db["dl_employment_types"]
         self._option_roles: Collection = self._db["dl_roles"]
         self._option_departments: Collection = self._db["dl_departments"]
@@ -213,6 +215,8 @@ class DemoAdapter(DirectoryAdapter):
             (self._option_actions, [("order", ASCENDING)], {"name": "idx_actions_order"}),
             (self._option_groups, [("order", ASCENDING)], {"name": "idx_dl_groups_order"}),
             (self._option_rules, [("order", ASCENDING)], {"name": "idx_rules_order"}),
+            (self._auth_users, [("username", ASCENDING)], {"unique": True, "name": "idx_auth_users_username"}),
+            (self._permissions, [("order", ASCENDING)], {"name": "idx_permissions_order"}),
             (self._option_employment_types, [("order", ASCENDING)], {"name": "idx_employment_types_order"}),
             (self._option_roles, [("order", ASCENDING)], {"name": "idx_roles_order"}),
             (self._option_departments, [("order", ASCENDING)], {"name": "idx_departments_order"}),
@@ -241,6 +245,8 @@ class DemoAdapter(DirectoryAdapter):
                 self._option_actions,
                 self._option_groups,
                 self._option_rules,
+                self._auth_users,
+                self._permissions,
                 self._option_employment_types,
                 self._option_roles,
                 self._option_departments,
@@ -574,6 +580,33 @@ class DemoAdapter(DirectoryAdapter):
         if refresh or not self._employee_record_fields:
             return self.refresh_employee_record_fields()
         return deepcopy(self._employee_record_fields)
+
+    def get_auth_user(self, username: str) -> Optional[Dict[str, Any]]:
+        if not username:
+            return None
+        normalized = username.strip().lower()
+        if not normalized:
+            return None
+        return self._auth_users.find_one({"username": normalized})
+
+    def resolve_role_permissions(self, role_names: Iterable[str]) -> Dict[str, List[str]]:
+        permissions: Set[str] = set()
+        grantable: Set[str] = set()
+        normalized_roles = [role.strip().lower() for role in role_names or [] if role]
+        if not normalized_roles:
+            return {"permissions": [], "grantableRoles": []}
+        cursor = self._permissions.find({"_id": {"$in": normalized_roles}})
+        for doc in cursor:
+            for perm in doc.get("permissions", []):
+                if perm:
+                    permissions.add(str(perm))
+            for grantable_role in doc.get("grantableRoles", []):
+                if grantable_role:
+                    grantable.add(str(grantable_role))
+        return {
+            "permissions": sorted(permissions),
+            "grantableRoles": sorted(grantable),
+        }
 
     def _propose_employee_record(
         self,

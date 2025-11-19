@@ -657,3 +657,17 @@ admin @ 127.0.0.1 - - [11/Nov/2025 21:45:12] "POST /api/apply HTTP/1.1" 200 - SU
   Removed: 0 (-)
   Audit: a_e07d10a7b6634eba9fa153751fba7b71
   Policy Notes: None
+operator @ 127.0.0.1 - - [18/Nov/2025 21:59:37] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: User -> Frank Patel
+  Added: 1 (Frank Patel)
+  Removed: 1 (Frank Patel)
+  Audit: a_ddc165d6ebb64a299863b041485d0692
+  Policy Notes: None
+operator @ 127.0.0.1 - - [18/Nov/2025 22:03:02] "POST /api/apply HTTP/1.1" 200 - SUCCESS
+  Group: ACL_EVIN-North
+  Rule: Dynamic Expression -> employmentType == "Contractor"
+  Added: 1 (Jane Doe)
+  Removed: 1 (Jane Doe)
+  Audit: a_38865c93b2dc4f9190b818f666a6fc94
+  Policy Notes: Dynamic expressions evaluate against live demo attributes.

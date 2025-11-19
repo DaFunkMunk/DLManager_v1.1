@@ -152,6 +152,15 @@ body {
   background: rgba(15, 118, 110, 0.08);
 }
 
+.meta-manage {
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.meta-manage:hover {
+  background: rgba(15, 118, 110, 0.08);
+}
+
 .demo-status {
   margin-top: 6px;
   font-size: 14px;

@@ -22,6 +22,7 @@
   const promptStatus = document.getElementById("promptStatus");
   const currentUserEl = document.getElementById("currentUser");
   const currentUserNameEl = currentUserEl ? currentUserEl.querySelector(".meta-user__name") : null;
+  const manageAccessBtn = document.getElementById("manageAccessBtn");
   const logoutBtn = document.getElementById("logoutBtn");
   const toggleAuditBtn = document.getElementById("toggleAuditBtn");
   const toggleLogsBtn = document.getElementById("toggleLogsBtn");
@@ -1051,9 +1052,22 @@
           currentUserNameEl.textContent = data.user;
         }
         currentUserEl.classList.add("meta-user--visible");
+        if (manageAccessBtn) {
+          const permissions = Array.isArray(data.permissions) ? data.permissions : [];
+          const canManage = permissions.includes("user_manage");
+          manageAccessBtn.classList.toggle("hidden", !canManage);
+          if (canManage) {
+            manageAccessBtn.disabled = false;
+          } else {
+            manageAccessBtn.disabled = true;
+          }
+        }
       })
       .catch(() => {
         currentUserEl.classList.remove("meta-user--visible");
+        if (manageAccessBtn) {
+          manageAccessBtn.classList.add("hidden");
+        }
       });
   }
   function formatMembershipValue(member) {
@@ -1881,6 +1895,11 @@
   if (employeeRecordClearBtn) {
     employeeRecordClearBtn.addEventListener("click", () => {
       clearEmployeeRecordInputs();
+    });
+  }
+  if (manageAccessBtn) {
+    manageAccessBtn.addEventListener("click", () => {
+      alert("Manage Access controls are coming soon.");
     });
   }
   if (logoutBtn) {

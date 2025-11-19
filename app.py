@@ -5,7 +5,9 @@ import datetime
 import subprocess
 from datetime import timedelta
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
+from functools import wraps
+import bcrypt
 
 try:
     from dotenv import load_dotenv
@@ -32,6 +34,16 @@ USERS = {
     "jdoe": "password123",
     "admin": "adminpass"
 }
+
+FULL_ACCESS_PERMISSIONS = [
+    "prompt_run",
+    "propose",
+    "apply",
+    "audit_view",
+    "validator_run",
+    "user_manage",
+]
+LEGACY_GRANTABLE_ROLES = ["admin", "operator", "viewer"]
 
 # SQL Server connection string
 conn_str = (
@@ -87,6 +99,100 @@ def _get_intent_parser() -> IntentSlotParser:
     return _intent_parser
 
 
+def _get_auth_adapter() -> Optional[DemoAdapter]:
+    adapter = _get_demo_adapter()
+    if adapter and hasattr(adapter, "get_auth_user"):
+        return adapter  # type: ignore[return-value]
+    return None
+
+
+def _legacy_authenticate(username: str, password: str) -> Optional[Dict[str, Any]]:
+    if username in USERS and USERS[username] == password:
+        return {
+            "username": username,
+            "displayName": username,
+            "roles": ["admin"],
+            "permissions": FULL_ACCESS_PERMISSIONS,
+            "grantableRoles": LEGACY_GRANTABLE_ROLES,
+        }
+    return None
+
+
+def _mongo_authenticate(username: str, password: str) -> Optional[Dict[str, Any]]:
+    adapter = _get_auth_adapter()
+    if not adapter:
+        return None
+    doc = adapter.get_auth_user(username)
+    if not doc or doc.get("active") is False:
+        return None
+    stored_hash = (doc.get("password_hash") or "").encode("utf-8")
+    if not stored_hash:
+        return None
+    supplied = (password or "").encode("utf-8")
+    try:
+        if not bcrypt.checkpw(supplied, stored_hash):
+            return None
+    except ValueError:
+        return None
+    roles = doc.get("roles") or []
+    role_info = adapter.resolve_role_permissions(roles)
+    return {
+        "username": doc.get("username") or username,
+        "displayName": doc.get("displayName") or doc.get("username") or username,
+        "roles": roles,
+        "permissions": role_info.get("permissions", []),
+        "grantableRoles": role_info.get("grantableRoles", []),
+    }
+
+
+def _authenticate_user(username: str, password: str) -> Optional[Dict[str, Any]]:
+    normalized_username = (username or "").strip().lower()
+    if not normalized_username:
+        return None
+    auth_doc = _mongo_authenticate(normalized_username, password)
+    if auth_doc:
+        return auth_doc
+    return _legacy_authenticate(normalized_username, password)
+
+
+def _set_session_user(payload: Dict[str, Any]) -> None:
+    session["user"] = payload.get("username")
+    session["displayName"] = payload.get("displayName") or payload.get("username")
+    session["roles"] = payload.get("roles", [])
+    session["permissions"] = payload.get("permissions", [])
+    session["grantableRoles"] = payload.get("grantableRoles", [])
+
+
+def _clear_session_user() -> None:
+    session.pop("user", None)
+    session.pop("displayName", None)
+    session.pop("roles", None)
+    session.pop("permissions", None)
+    session.pop("grantableRoles", None)
+
+
+def has_permission(permission: str) -> bool:
+    if not permission:
+        return True
+    perms = session.get("permissions") or []
+    return permission in perms
+
+
+def require_permission(permission: str):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if has_permission(permission):
+                return func(*args, **kwargs)
+            if request.path.startswith("/api/"):
+                return jsonify({"error": "forbidden", "missingPermission": permission}), 403
+            return redirect("/login")
+
+        return wrapper
+
+    return decorator
+
+
 def _resolve_mode() -> str:
     mode = request.headers.get("X-Mode") or request.args.get("mode") or MODE_DEFAULT
     return str(mode).lower()
@@ -105,7 +211,10 @@ def get_directory_adapter() -> DirectoryAdapter:
 def require_login():
     session.permanent = True
     if 'user' in session:
-        return
+        if session.get("permissions") is None:
+            _clear_session_user()
+        else:
+            return
 
     if request.endpoint in ('login', 'get_log_file', 'api_me', 'api_logout', 'static', 'serve_banner'):
         return
@@ -116,6 +225,7 @@ def require_login():
     return redirect('/login')
 
 @app.route('/api/nlp/parse', methods=['POST'])
+@require_permission("prompt_run")
 def api_nlp_parse():
     payload = request.get_json(force=True, silent=True) or {}
     text = (payload.get("text") or "").strip()
@@ -142,10 +252,11 @@ def api_nlp_parse():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        if username in USERS and USERS[username] == password:
-            session['user'] = username
+        username = (request.form.get('username') or "").strip()
+        password = request.form.get('password') or ""
+        auth_payload = _authenticate_user(username, password)
+        if auth_payload:
+            _set_session_user(auth_payload)
             return redirect('/')
         else:
             return render_template("login.html", error="Invalid username or password")
@@ -153,7 +264,7 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
+    _clear_session_user()
     return redirect('/login')
 
 def append_to_log(entry):
@@ -164,6 +275,7 @@ def append_to_log(entry):
         print("Failed to write to log.txt:", str(e))
 
 @app.route('/api/logs')
+@require_permission("audit_view")
 def get_log_file():
     if not os.path.exists(LOG_FILE):
         return "", 200
@@ -176,10 +288,18 @@ def api_me():
     user = session.get('user')
     if not user:
         return jsonify({"authenticated": False}), 401
-    return jsonify({"authenticated": True, "user": user})
+    return jsonify({
+        "authenticated": True,
+        "user": session.get("displayName") or user,
+        "username": user,
+        "roles": session.get("roles", []),
+        "permissions": session.get("permissions", []),
+        "grantableRoles": session.get("grantableRoles", []),
+    })
 
 
 @app.route('/api/group-members')
+@require_permission("prompt_run")
 def api_group_members():
     group_ref = (request.args.get('group') or '').strip()
     if not group_ref:
@@ -201,7 +321,7 @@ def api_group_members():
 
 @app.route('/api/logout', methods=['POST'])
 def api_logout():
-    session.pop('user', None)
+    _clear_session_user()
     return jsonify({"ok": True})
 
 # @app.route('/Coterra-Logo.png')
@@ -210,6 +330,7 @@ def api_logout():
 
 
 @app.route('/api/demo/actions')
+@require_permission("prompt_run")
 def api_demo_actions():
     adapter = get_directory_adapter()
     try:
@@ -220,6 +341,7 @@ def api_demo_actions():
 
 
 @app.route('/api/demo/groups')
+@require_permission("prompt_run")
 def api_demo_groups():
     adapter = get_directory_adapter()
     try:
@@ -230,6 +352,7 @@ def api_demo_groups():
 
 
 @app.route('/api/demo/rules')
+@require_permission("prompt_run")
 def api_demo_rules():
     adapter = get_directory_adapter()
     try:
@@ -256,6 +379,7 @@ def serve_expression_guide():
 
 
 @app.route('/api/users')
+@require_permission("prompt_run")
 def api_users():
     adapter = get_directory_adapter()
     query = request.args.get("q")
@@ -269,6 +393,7 @@ def api_users():
 
 
 @app.route('/api/groups')
+@require_permission("prompt_run")
 def api_groups():
     adapter = get_directory_adapter()
     query = request.args.get("q")
@@ -282,6 +407,7 @@ def api_groups():
 
 
 @app.route('/api/propose', methods=['POST'])
+@require_permission("propose")
 def api_propose():
     adapter = get_directory_adapter()
     intent = request.get_json(force=True, silent=True) or {}
@@ -298,6 +424,7 @@ def api_propose():
 
 
 @app.route('/api/apply', methods=['POST'])
+@require_permission("apply")
 def api_apply():
     adapter = get_directory_adapter()
     payload = request.get_json(force=True, silent=True) or {}
@@ -348,6 +475,7 @@ def api_apply():
 
 
 @app.route('/api/expression/validate', methods=['POST'])
+@require_permission("prompt_run")
 def api_validate_expression():
     adapter = get_directory_adapter()
     body = request.get_json(force=True, silent=True) or {}
@@ -366,6 +494,7 @@ def api_validate_expression():
     return jsonify(result)
 
 @app.route('/api/audit')
+@require_permission("audit_view")
 def api_audit():
     adapter = get_directory_adapter()
     try:
