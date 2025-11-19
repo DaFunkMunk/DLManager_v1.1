@@ -193,6 +193,25 @@ def require_permission(permission: str):
     return decorator
 
 
+def has_manage_access() -> bool:
+    if has_permission("user_manage"):
+        return True
+    grantable = session.get("grantableRoles") or []
+    return bool(grantable)
+
+
+def require_manage_access(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if has_manage_access():
+            return func(*args, **kwargs)
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "forbidden", "missingPermission": "manage_access"}), 403
+        return redirect("/login")
+
+    return wrapper
+
+
 def _resolve_mode() -> str:
     mode = request.headers.get("X-Mode") or request.args.get("mode") or MODE_DEFAULT
     return str(mode).lower()
@@ -504,6 +523,74 @@ def api_audit():
     except Exception as exc:  # pragma: no cover - defensive
         return jsonify({"error": str(exc)}), 500
     return jsonify(entries)
+
+
+@app.route('/api/auth/users', methods=['GET'])
+@require_manage_access
+def api_auth_users():
+    adapter = _get_auth_adapter()
+    if not adapter:
+        return jsonify({"error": "Manage access is only available in demo mode."}), 503
+    try:
+        users = adapter.list_auth_users()
+        roles = adapter.list_role_definitions()
+    except Exception as exc:  # pragma: no cover - defensive
+        return jsonify({"error": str(exc)}), 500
+    return jsonify(
+        {
+            "users": users,
+            "roles": roles,
+            "allowedRoles": session.get("grantableRoles", []),
+            "hasFullControl": has_permission("user_manage"),
+        }
+    )
+
+
+@app.route('/api/auth/users/<user_id>', methods=['PATCH'])
+@require_manage_access
+def api_auth_user_update(user_id: str):
+    adapter = _get_auth_adapter()
+    if not adapter:
+        return jsonify({"error": "Manage access is only available in demo mode."}), 503
+    payload = request.get_json(force=True, silent=True) or {}
+    requested_roles = payload.get("roles")
+    requested_active = payload.get("active")
+
+    normalized_roles = None
+    if requested_roles is not None:
+        if not isinstance(requested_roles, list) or not requested_roles:
+            return jsonify({"error": "roles must be a non-empty array."}), 400
+        normalized_roles = [str(role).strip().lower() for role in requested_roles if role]
+        if not normalized_roles:
+            return jsonify({"error": "Provide at least one valid role."}), 400
+        allowed_roles = set(session.get("grantableRoles") or [])
+        if not allowed_roles and not has_permission("user_manage"):
+            return jsonify({"error": "forbidden", "missingPermission": "manage_access"}), 403
+        if not has_permission("user_manage"):
+            disallowed = [role for role in normalized_roles if role not in allowed_roles]
+            if disallowed:
+                return jsonify({"error": f"Cannot assign roles: {', '.join(disallowed)}"}), 403
+
+    if requested_active is not None:
+        if not has_permission("user_manage"):
+            return jsonify({"error": "Only administrators may toggle active status."}), 403
+        requested_active = bool(requested_active)
+
+    try:
+        updated = adapter.update_auth_user(
+            user_id,
+            roles=normalized_roles,
+            active=requested_active,
+        )
+    except Exception as exc:  # pragma: no cover - defensive
+        return jsonify({"error": str(exc)}), 500
+
+    if not updated:
+        return jsonify({"error": "User not found or no changes applied."}), 404
+
+    actor = session.get("user", "unknown")
+    append_to_log(f"[RBAC] {actor} updated auth user '{user_id}'")
+    return jsonify({"ok": True})
 
 @app.route('/api/lists')
 def get_dl_lists():

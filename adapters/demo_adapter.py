@@ -581,6 +581,58 @@ class DemoAdapter(DirectoryAdapter):
             return self.refresh_employee_record_fields()
         return deepcopy(self._employee_record_fields)
 
+    def list_auth_users(self) -> List[Dict[str, Any]]:
+        cursor = self._auth_users.find({}).sort("username", ASCENDING)
+        users: List[Dict[str, Any]] = []
+        for doc in cursor:
+            users.append(
+                {
+                    "id": doc.get("_id"),
+                    "username": doc.get("username"),
+                    "displayName": doc.get("displayName"),
+                    "roles": doc.get("roles", []),
+                    "active": bool(doc.get("active", True)),
+                    "userId": doc.get("userId"),
+                    "createdAt": doc.get("createdAt"),
+                    "updatedAt": doc.get("updatedAt"),
+                }
+            )
+        return users
+
+    def list_role_definitions(self) -> List[Dict[str, Any]]:
+        cursor = self._permissions.find({}).sort("order", ASCENDING)
+        roles: List[Dict[str, Any]] = []
+        for doc in cursor:
+            roles.append(
+                {
+                    "id": doc.get("_id"),
+                    "description": doc.get("description"),
+                    "permissions": doc.get("permissions", []),
+                    "grantableRoles": doc.get("grantableRoles", []),
+                }
+            )
+        return roles
+
+    def update_auth_user(
+        self,
+        user_id: str,
+        *,
+        roles: Optional[List[str]] = None,
+        active: Optional[bool] = None,
+    ) -> bool:
+        if not user_id:
+            return False
+        updates: Dict[str, Any] = {}
+        if roles is not None:
+            updates["roles"] = roles
+        if active is not None:
+            updates["active"] = bool(active)
+        if not updates:
+            return False
+        updates["updatedAt"] = dt.datetime.utcnow()
+        result = self._auth_users.update_one({"_id": user_id}, {"$set": updates})
+        return bool(result.matched_count)
+
     def get_auth_user(self, username: str) -> Optional[Dict[str, Any]]:
         if not username:
             return None

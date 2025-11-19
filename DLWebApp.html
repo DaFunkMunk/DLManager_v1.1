@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Distribution List Copilot</title>
-  <link rel="stylesheet" href="styles.css">
-  <script defer src="/app.js"></script>
+  <link rel="stylesheet" href="styles.css?v=20251119">
+  <script defer src="/app.js?v=20251119"></script>
 </head>
 <body>
   <main class="copilot-wrapper">
@@ -135,6 +135,17 @@
       <button id="hideLogsBtn" type="button" class="btn log-panel-close">Hide Logs</button>
     </div>
     <pre id="logContent"></pre>
+  </aside>
+
+  <aside id="accessPanel" class="access-panel">
+    <div class="access-panel-header">
+      <h2>Manage Access</h2>
+      <button id="hideAccessBtn" type="button" class="btn access-panel-close">Hide</button>
+    </div>
+    <div id="accessStatus" class="access-status"></div>
+    <div id="accessContent" class="access-panel-content">
+      <p class="status-empty">Select Manage Access to load the user list.</p>
+    </div>
   </aside>
 </body>
 </html>

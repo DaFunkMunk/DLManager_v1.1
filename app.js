@@ -33,6 +33,10 @@
   const auditPanel = document.getElementById("auditPanel");
   const logContent = document.getElementById("logContent");
   const auditContent = document.getElementById("auditContent");
+  const accessPanel = document.getElementById("accessPanel");
+  const accessContent = document.getElementById("accessContent");
+  const accessStatus = document.getElementById("accessStatus");
+  const hideAccessBtn = document.getElementById("hideAccessBtn");
   let promptSpinnerInterval = null;
 
   let RULE_LABELS = {};
@@ -77,6 +81,15 @@
   let membershipError = null;
   let hasGroupSelected = false;
   let employeeRecordMeta = {};
+  let manageAccessContext = {
+    grantableRoles: [],
+    hasFullControl: false
+  };
+
+  if (manageAccessBtn) {
+    manageAccessBtn.classList.add("hidden");
+    manageAccessBtn.disabled = true;
+  }
 
   const apiFetch = (url, options = {}) => {
     const config = { ...options };
@@ -1052,21 +1065,24 @@
           currentUserNameEl.textContent = data.user;
         }
         currentUserEl.classList.add("meta-user--visible");
+        const permissions = Array.isArray(data.permissions) ? data.permissions : [];
+        const grantable = Array.isArray(data.grantableRoles) ? data.grantableRoles : [];
+        manageAccessContext = {
+          grantableRoles: grantable,
+          hasFullControl: permissions.includes("user_manage")
+        };
         if (manageAccessBtn) {
-          const permissions = Array.isArray(data.permissions) ? data.permissions : [];
-          const canManage = permissions.includes("user_manage");
+          const canManage = manageAccessContext.hasFullControl || grantable.length > 0;
           manageAccessBtn.classList.toggle("hidden", !canManage);
-          if (canManage) {
-            manageAccessBtn.disabled = false;
-          } else {
-            manageAccessBtn.disabled = true;
-          }
+          manageAccessBtn.disabled = !canManage;
         }
       })
       .catch(() => {
         currentUserEl.classList.remove("meta-user--visible");
+        manageAccessContext = { grantableRoles: [], hasFullControl: false };
         if (manageAccessBtn) {
           manageAccessBtn.classList.add("hidden");
+          manageAccessBtn.disabled = true;
         }
       });
   }
@@ -1260,6 +1276,268 @@
         }
       }
     }
+  }
+
+  function setAccessStatus(message, variant = "info") {
+    if (!accessStatus) {
+      return;
+    }
+    accessStatus.textContent = message || "";
+    accessStatus.className = `access-status access-status--${variant}`;
+  }
+
+  function toggleAccessPanel(forceState) {
+    if (!accessPanel) {
+      return;
+    }
+    const shouldShow = typeof forceState === "boolean" ? forceState : !accessPanel.classList.contains("show");
+    accessPanel.classList.toggle("show", shouldShow);
+    if (shouldShow) {
+      setAccessStatus("Loading users...", "info");
+      loadManageAccess();
+      if (logPanel && logPanel.classList.contains("show")) {
+        toggleLogs();
+      }
+      if (auditPanel && auditPanel.classList.contains("show")) {
+        toggleAudit();
+      }
+    } else {
+      setAccessStatus("", "info");
+    }
+  }
+
+  function loadManageAccess() {
+    if (!accessContent) {
+      return;
+    }
+    accessContent.innerHTML = '<p class="access-empty">Loading users...</p>';
+    apiFetch("/api/auth/users")
+      .then(res => {
+        if (res.status === 401) {
+          window.location.href = "/login";
+          return null;
+        }
+        if (res.status === 403) {
+          toggleAccessPanel(false);
+          return null;
+        }
+        if (!res.ok) {
+          return res.json().then(body => {
+            throw new Error(body && body.error ? body.error : "Failed to load users.");
+          });
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (!data) {
+          return;
+        }
+        manageAccessContext = {
+          grantableRoles: Array.isArray(data.allowedRoles) ? data.allowedRoles : [],
+          hasFullControl: Boolean(data.hasFullControl)
+        };
+        renderAccessUsers(
+          Array.isArray(data.users) ? data.users : [],
+          Array.isArray(data.roles) ? data.roles : [],
+          manageAccessContext.grantableRoles
+        );
+        setAccessStatus("", "info");
+      })
+      .catch(err => {
+        const message = err && err.message ? err.message : "Failed to load users.";
+        setAccessStatus(message, "error");
+        accessContent.innerHTML = '<p class="access-empty">Unable to load users.</p>';
+      });
+  }
+
+  function renderAccessUsers(users, roles, allowedRoles) {
+    if (!accessContent) {
+      return;
+    }
+    accessContent.innerHTML = "";
+    const roleMap = {};
+    roles.forEach(role => {
+      const id = role.id || role._id || role.value;
+      if (id) {
+        roleMap[id] = role;
+      }
+    });
+    if (!users.length) {
+      const empty = document.createElement("p");
+      empty.className = "access-empty";
+      empty.textContent = "No users found.";
+      accessContent.appendChild(empty);
+      return;
+    }
+
+    const table = document.createElement("table");
+    table.className = "access-table";
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Current Role</th>
+          <th>Status</th>
+          <th>Assign Role</th>
+        </tr>
+      </thead>
+    `;
+
+    const tbody = document.createElement("tbody");
+    users.forEach(user => {
+      const row = document.createElement("tr");
+      const userId = user.id || user._id || user.username;
+      const currentRoles = Array.isArray(user.roles) ? user.roles : [];
+      const sessionGrantableRoles = Array.isArray(manageAccessContext.grantableRoles)
+        ? manageAccessContext.grantableRoles
+        : [];
+      const canEditRoles =
+        manageAccessContext.hasFullControl ||
+        (sessionGrantableRoles.length > 0 && currentRoles.every(role => sessionGrantableRoles.includes(role)));
+
+      const userCell = document.createElement("td");
+      userCell.className = "access-user";
+      const nameEl = document.createElement("span");
+      nameEl.className = "access-user__name";
+      nameEl.textContent = user.displayName || user.username || "(unknown)";
+      const usernameEl = document.createElement("span");
+      usernameEl.className = "access-user__username";
+      usernameEl.textContent = user.username || "";
+      userCell.appendChild(nameEl);
+      userCell.appendChild(usernameEl);
+
+      const roleCell = document.createElement("td");
+      const badgeWrap = document.createElement("div");
+      badgeWrap.className = "access-role-badges";
+      if (!currentRoles.length) {
+        const badge = document.createElement("span");
+        badge.className = "access-role";
+        badge.textContent = "None";
+        badgeWrap.appendChild(badge);
+      } else {
+        currentRoles.forEach(role => {
+          const roleBadge = document.createElement("span");
+          roleBadge.className = "access-role access-role--current";
+          roleBadge.textContent = (roleMap[role]?.id || role || "").toUpperCase();
+          roleWrapText(roleBadge, role, roleMap);
+          badgeWrap.appendChild(roleBadge);
+        });
+      }
+      roleCell.appendChild(badgeWrap);
+
+      const statusCell = document.createElement("td");
+      const isActive = user.active !== false;
+      if (manageAccessContext.hasFullControl) {
+        const wrapper = document.createElement("label");
+        wrapper.className = "access-actions";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = isActive;
+        checkbox.dataset.userid = userId;
+        const label = document.createElement("span");
+        label.textContent = isActive ? "Active" : "Inactive";
+        checkbox.addEventListener("change", event => {
+          const nextValue = event.target.checked;
+          updateAccessUser(userId, { active: nextValue }, () => {
+            event.target.checked = !nextValue;
+            label.textContent = !nextValue ? "Inactive" : "Active";
+          });
+          label.textContent = nextValue ? "Active" : "Inactive";
+        });
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(label);
+        statusCell.appendChild(wrapper);
+      } else {
+        statusCell.textContent = isActive ? "Active" : "Inactive";
+      }
+
+      const assignCell = document.createElement("td");
+      if (canEditRoles && sessionGrantableRoles.length) {
+        const select = document.createElement("select");
+        select.className = "access-role-select";
+        select.dataset.userid = userId;
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Assign role...";
+        select.appendChild(placeholder);
+        sessionGrantableRoles.forEach(role => {
+          const option = document.createElement("option");
+          option.value = role;
+          option.textContent = (roleMap[role]?.id || role || "").toUpperCase();
+          select.appendChild(option);
+        });
+        select.addEventListener("change", event => {
+          const value = event.target.value;
+          if (!value) {
+            return;
+          }
+          updateAccessUser(userId, { roles: [value] }, () => {
+            event.target.value = "";
+          });
+          event.target.value = "";
+        });
+        assignCell.appendChild(select);
+      } else {
+        assignCell.textContent = manageAccessContext.hasFullControl ? "Not permitted" : "View only";
+      }
+
+      row.appendChild(userCell);
+      row.appendChild(roleCell);
+      row.appendChild(statusCell);
+      row.appendChild(assignCell);
+      tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
+    accessContent.appendChild(table);
+  }
+
+  function roleWrapText(badge, role, roleMap) {
+    if (!badge) {
+      return;
+    }
+    const definition = roleMap[role];
+    if (definition && definition.description) {
+      badge.title = definition.description;
+    }
+  }
+
+  function updateAccessUser(userId, payload, rollback) {
+    if (!userId) {
+      return;
+    }
+    setAccessStatus("Saving changes...", "info");
+    apiFetch(`/api/auth/users/${encodeURIComponent(userId)}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload)
+    })
+      .then(res => {
+        if (res.status === 401) {
+          window.location.href = "/login";
+          return null;
+        }
+        if (!res.ok) {
+          return res.json().then(body => {
+            const message = body && body.error ? body.error : "Failed to update user.";
+            throw new Error(message);
+          });
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (!data) {
+          return;
+        }
+        setAccessStatus("Access updated.", "info");
+        loadManageAccess();
+      })
+      .catch(error => {
+        if (typeof rollback === "function") {
+          rollback();
+        }
+        const message = error && error.message ? error.message : "Failed to update user.";
+        setAccessStatus(message, "error");
+      });
   }
   function getSelectLabel(selectEl) {
     if (!selectEl) return "";
@@ -1898,9 +2176,10 @@
     });
   }
   if (manageAccessBtn) {
-    manageAccessBtn.addEventListener("click", () => {
-      alert("Manage Access controls are coming soon.");
-    });
+    manageAccessBtn.addEventListener("click", () => toggleAccessPanel(true));
+  }
+  if (hideAccessBtn) {
+    hideAccessBtn.addEventListener("click", () => toggleAccessPanel(false));
   }
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
