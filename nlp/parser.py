@@ -95,13 +95,17 @@ class IntentSlotParser:
         self,
         model_dir: Path = Path("models/intent_slot"),
         synonyms_path: Path = Path("nlp_synonyms.json"),
+        synonyms: Optional[Dict[str, Any]] = None,
     ) -> None:
         self.intent_clf = joblib.load(model_dir / "intent_classifier.joblib")
         self.intent_encoder = joblib.load(model_dir / "label_encoder.joblib")
         self.slot_vectorizer = joblib.load(model_dir / "slot_vectorizer.joblib")
         self.slot_label_encoder = joblib.load(model_dir / "slot_label_encoder.joblib")
         self.slot_classifier = joblib.load(model_dir / "slot_classifier.joblib")
-        self.synonyms = load_json(synonyms_path)
+        if synonyms is not None:
+            self.synonyms = synonyms
+        else:
+            self.synonyms = load_json(synonyms_path)
         self.inverse_synonyms = build_inverse_synonyms(self.synonyms)
         self.employee_names = {
             name.lower(): name for name in self.synonyms.get("employee_names", [])

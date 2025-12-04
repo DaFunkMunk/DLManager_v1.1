@@ -3,6 +3,7 @@ import pyodbc
 import os
 import datetime
 import subprocess
+import json
 from datetime import timedelta
 from pathlib import Path
 from typing import Optional, Dict, Any
@@ -18,6 +19,7 @@ from adapters.base import DirectoryAdapter
 from adapters.standard_adapter import StandardAdapter
 from adapters.demo_adapter import DemoAdapter
 from nlp.parser import IntentSlotParser
+from nlp.synonym_loader import load_dynamic_synonyms
 
 #python app.py 
 #start chrome --app=http://127.0.0.1:5000
@@ -90,12 +92,45 @@ def _get_demo_adapter() -> Optional[DirectoryAdapter]:
     return _demo_adapter
 
 
+def _load_static_synonyms() -> Dict[str, Any]:
+    path = Path("nlp_synonyms.json")
+    if not path.exists():
+        return {}
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
+    except Exception:
+        return {}
+
+
+def _build_parser_synonyms() -> Dict[str, Any]:
+    static_syn = _load_static_synonyms()
+    merged: Dict[str, Any] = {
+        "rule_type": static_syn.get("rule_type", {}),
+        "boolean_values": static_syn.get("boolean_values", {}),
+        "tenure_phrases": static_syn.get("tenure_phrases", {}),
+        "value_synonyms": dict(static_syn.get("value_synonyms", {})),
+        "employee_names": static_syn.get("employee_names", []),
+    }
+
+    adapter = _get_demo_adapter()
+    if adapter:
+        try:
+            dynamic = load_dynamic_synonyms(adapter, static_syn)
+            if dynamic.get("value_synonyms"):
+                merged["value_synonyms"].update(dynamic["value_synonyms"])
+            if dynamic.get("employee_names"):
+                merged["employee_names"] = dynamic["employee_names"]
+        except Exception as exc:
+            print(f"Failed to load dynamic synonyms: {exc}")
+    return merged
+
+
 def _get_intent_parser() -> IntentSlotParser:
     global _intent_parser
     if _intent_parser is None:
         model_dir = Path("models/intent_slot")
-        synonyms = Path("nlp_synonyms.json")
-        _intent_parser = IntentSlotParser(model_dir=model_dir, synonyms_path=synonyms)
+        _intent_parser = IntentSlotParser(model_dir=model_dir, synonyms=_build_parser_synonyms())
     return _intent_parser
 
 
@@ -268,6 +303,24 @@ def api_nlp_parse():
     )
 
 
+@app.route('/api/nlp/reload-synonyms', methods=['POST'])
+@require_permission("user_manage")
+def api_reload_synonyms():
+    global _intent_parser
+    try:
+        synonyms = _build_parser_synonyms()
+        _intent_parser = IntentSlotParser(model_dir=Path("models/intent_slot"), synonyms=synonyms)
+        return jsonify(
+            {
+                "status": "reloaded",
+                "value_synonym_categories": len(synonyms.get("value_synonyms", {})),
+                "employee_names": len(synonyms.get("employee_names", [])),
+            }
+        )
+    except Exception as exc:
+        return jsonify({"error": str(exc)}), 500
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -288,8 +341,13 @@ def logout():
 
 def append_to_log(entry):
     try:
-        with open(LOG_FILE, "a", encoding="utf-8") as f:
+        existing: list[str] = []
+        if os.path.exists(LOG_FILE):
+            with open(LOG_FILE, "r", encoding="utf-8") as f:
+                existing = f.readlines()
+        with open(LOG_FILE, "w", encoding="utf-8") as f:
             f.write(entry + "\n")
+            f.writelines(existing)
     except Exception as e:
         print("Failed to write to log.txt:", str(e))
 
