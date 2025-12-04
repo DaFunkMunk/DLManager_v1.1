@@ -579,16 +579,16 @@ class IntentSlotParser:
                 resolved_intent = "edit_rule"
 
         # Employment-type rule heuristics (remove/edit/add)
+        removal_keywords = ["remove", "drop", "delete", "eliminate", "retire"]
         employment_context = any(
             phrase in lowered for phrase in ["employment type", "employment status", "contract type", "employment rule"]
-        )
+        ) or any(word in lowered for word in removal_keywords)
         if (
             (merged.get("rule_type") or "").lower() != "employment-type"
             and (employment_context or "rule" in lowered)
             and employment_matches
         ):
             if employment_matches:
-                removal_keywords = ["remove", "drop", "delete", "eliminate", "retire"]
                 if any(word in lowered for word in removal_keywords):
                     merged["rule_type"] = "employment-type"
                     merged["rule_value"] = employment_matches[0]

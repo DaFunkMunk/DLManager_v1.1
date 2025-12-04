@@ -74,3 +74,8 @@
 {"text": "Add users tagged Analytics", "intent": "add_rule", "slots": {"rule_type": "tag", "rule_value": "analytics"}}
 {"text": "Switch the Houston HQ location rule to Permian Field Office", "intent": "edit_rule", "slots": {"rule_type": "location", "from_value": "houston hq", "to_value": "permian field office"}}
 {"text": "Replace DL_HSE_Responders with DL_Corporate_IT", "intent": "edit_rule", "slots": {"rule_type": "directory-group", "from_value": "dl_hse_responders", "to_value": "dl_corporate_it"}}
+{"text": "Remove all contractors", "intent": "remove_rule", "slots": {"rule_type": "employment-type", "rule_value": "contractor"}}
+{"text": "Remove the interns", "intent": "remove_rule", "slots": {"rule_type": "employment-type", "rule_value": "intern"}}
+{"text": "Remove all temps", "intent": "remove_rule", "slots": {"rule_type": "employment-type", "rule_value": "contractor"}}
+{"text": "Remove all contractors in Permian", "intent": "remove_rule", "slots": {"rule_type": "employment-type", "rule_value": "contractor", "location": "permian field office"}}
+{"text": "Drop the contractor rule", "intent": "remove_rule", "slots": {"rule_type": "employment-type", "rule_value": "contractor"}}
